@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShoppingBag, Flame, Zap, Info } from 'lucide-react';
+import { X, ShoppingBag, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '../../types';
 import { useCart } from '../../hooks/useCart';
