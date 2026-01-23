@@ -2,7 +2,7 @@ import React from 'react';
 
 const TrustSection: React.FC = () => {
     const stats = [
-        { val: "+500", label: "ATLETAS ALIMENTADOS" },
+        { val: "+100", label: "ATLETAS ALIMENTADOS" },
         { val: "100%", label: "INGREDIENTES NOBLES" },
         { val: "24h", label: "DESDE COCINA A TU MESA" }
     ];
