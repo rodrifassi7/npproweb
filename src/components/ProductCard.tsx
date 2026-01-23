@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Info, Zap, Snowflake } from 'lucide-react';
+import { Plus, Info, Zap } from 'lucide-react';
 import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { motion } from 'framer-motion';
