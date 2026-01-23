@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-nppro-green: #16A34A;
+  --color-nppro-black: #0B0B0B;
+  --color-nppro-dark: #111827;
+  --color-nppro-gray: #9CA3AF;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --accent-color: var(--color-nppro-green);
+}
+
+body {
+  background-color: var(--color-nppro-black);
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-sans);
+}
+
+/* Custom Utilities */
+@utility glass {
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@utility btn-primary {
+  background-color: var(--color-nppro-green);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  transition: all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+@utility btn-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  transition: all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:active {
+  transform: scale(0.95);
+}
