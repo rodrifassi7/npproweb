@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '../../types';
 import { useCart } from '../../hooks/useCart';
 import { CONFIG } from '../../data/data';
+import AnimatedNumber from '../common/AnimatedNumber';
 
 interface ProductDetailModalProps {
     product: Product | null;
@@ -85,7 +86,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                                     {Object.entries(product.macros).map(([key, val]) => (
                                         <div key={key} className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
                                             <div className="text-[10px] uppercase text-white/30 font-bold mb-1">{key}</div>
-                                            <div className="text-xl font-black italic text-nppro-green">{val}</div>
+                                            <div className="text-xl font-black italic text-nppro-green">
+                                                <AnimatedNumber value={val} duration={1000} />
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

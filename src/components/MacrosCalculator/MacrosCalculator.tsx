@@ -226,7 +226,7 @@ const MacrosCalculator: React.FC = () => {
                                             to="/menu"
                                             className="w-full bg-black text-white font-bold italic py-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-80 transition-opacity text-[10px] tracking-[0.2em] uppercase"
                                         >
-                                            Ver comidas sugeridas <ArrowRight size={14} />
+                                            Ver menú <ArrowRight size={14} />
                                         </Link>
                                     </motion.div>
                                 ) : (

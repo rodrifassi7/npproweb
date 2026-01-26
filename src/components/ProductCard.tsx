@@ -55,17 +55,31 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
 
                 <div className="flex items-center justify-between gap-4 mt-auto">
                     <div className="flex flex-col">
-                        <span className="text-[10px] text-white/30 uppercase font-bold">Precio</span>
-                        <span className="text-xl font-black text-white italic">${product.price}</span>
+                        {/* Removed Price Display */}
+                        {/* <span className="text-[10px] text-white/30 uppercase font-bold">Precio</span>
+                        <span className="text-xl font-black text-white italic">${product.price}</span> */}
+
+                        {/* Show Macros if available */}
+                        {product.macros && (
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] text-white/40 uppercase font-bold">Macros / Porción</span>
+                                <div className="flex items-center gap-3 text-[10px] font-bold text-nppro-gray">
+                                    <span className="flex items-center gap-1"><Zap size={10} className="text-nppro-green" /> {product.macros.kcal} kcal</span>
+                                    <span>P: {product.macros.protein}g</span>
+                                    <span>C: {product.macros.carbs}g</span>
+                                    <span>G: {product.macros.fat}g</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={() => onViewDetail?.(product)}
-                            className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors text-white/50 hover:text-white"
+                            className="h-12 px-4 rounded-2xl bg-white/5 flex items-center justify-center gap-2 hover:bg-white/10 transition-colors text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-wider"
                             title="Ver detalles"
                         >
-                            <Info size={18} />
+                            <Info size={16} /> Más info
                         </button>
                         <button
                             onClick={() => addToCart(product, { useVacuum: false })}

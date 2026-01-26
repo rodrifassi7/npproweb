@@ -6,6 +6,7 @@ import FeaturesSection from '../components/home/FeaturesSection';
 import TrustSection from '../components/home/TrustSection';
 import FAQSection from '../components/home/FAQSection';
 import MacrosCalculator from '../components/MacrosCalculator/MacrosCalculator';
+import EntryDiscountModal from '../components/common/EntryDiscountModal'; // Added import
 import { getTodaySpecialByTime } from '../data/weeklyMenu';
 
 const Home: React.FC = () => {
@@ -14,6 +15,7 @@ const Home: React.FC = () => {
     return (
         <div className="flex flex-col bg-[#0B0B0B] text-white overflow-hidden">
             <HeroSection />
+            <EntryDiscountModal /> {/* Added EntryDiscountModal */}
             <DailySpecialSection dailySpecial={dailySpecial} />
             <VacuumSection />
             <FeaturesSection />
