@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, MessageCircle, Sparkles } from 'lucide-react';
+import { CONFIG } from '../../data/data';
 
 const STORAGE_KEY = 'nppro_discount_modal_seen';
 
@@ -36,7 +37,7 @@ const EntryDiscountModal: React.FC = () => {
 
     const handleClaim = () => {
         const message = encodeURIComponent("¡Hola! Vengo por mi descuento de bienvenida en la web 🎁");
-        window.open(`https://wa.me/5491112345678?text=${message}`, '_blank');
+        window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${message}`, '_blank');
         handleClose();
     };
 

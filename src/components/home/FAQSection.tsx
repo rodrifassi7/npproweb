@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, MessageCircle } from 'lucide-react';
+import { CONFIG } from '../../data/data';
 
 const FAQSection: React.FC = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -108,7 +109,7 @@ const FAQSection: React.FC = () => {
                 >
                     <p className="text-nppro-gray mb-6 italic">¿Tenés otra pregunta más específica?</p>
                     <a
-                        href="https://wa.me/5492804385269?text=Hola%20NP%20PRO%21"
+                        href={`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=Hola%20NP%20PRO%21`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold hover:bg-nppro-green hover:text-black hover:border-nppro-green transition-all group"

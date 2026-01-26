@@ -39,7 +39,7 @@ const Footer: React.FC = () => {
                                 {
                                     icon: <MessageCircle size={20} />,
                                     label: 'WhatsApp',
-                                    href: 'https://wa.me/5492804385269?text=Hola%20NP%20PRO%21',
+                                    href: `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=Hola%20NP%20PRO%21`,
                                 },
                             ].map((social) => (
                                 <a

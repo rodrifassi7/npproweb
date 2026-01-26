@@ -51,10 +51,8 @@ const PackBuilder: React.FC = () => {
             vacuum: item.useVacuum
         }));
 
-        // PHONE NUMBER: Using a placeholder or config if available. 
-        // Assuming implicit known number or adding one. 
-        // Defaulting to the one used in DiscountModal: 5491112345678
-        const PHONE = "5491112345678";
+        // PHONE NUMBER: Using config
+        const PHONE = CONFIG.WHATSAPP_NUMBER;
 
         const link = createWhatsAppLink(
             PHONE,
