@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nppro.com.ar/sitemap.xml

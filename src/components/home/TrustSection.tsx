@@ -4,7 +4,7 @@ import AnimatedNumber from '../common/AnimatedNumber';
 
 const TrustSection: React.FC = () => {
     const stats = [
-        { val: "+100", label: "ATLETAS ALIMENTADOS" },
+        { val: "+110", label: "ATLETAS ALIMENTADOS" },
         { val: "100%", label: "INGREDIENTES NOBLES" },
         { val: "24h", label: "DESDE LA COCINA A TU MESA" }
     ];

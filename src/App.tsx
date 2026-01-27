@@ -9,6 +9,9 @@ import Checkout from './pages/Checkout';
 import MacrosPage from './pages/MacrosCalculator';
 import { AnimatePresence, motion } from 'framer-motion';
 import ScrollToTop from './components/ScrollToTop';
+import FloatingWhatsAppButton from './components/common/FloatingWhatsAppButton';
+
+import LocalSeo from './pages/LocalSeo';
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -41,9 +44,11 @@ function App() {
               <Route path="/packs" element={<PackBuilder />} />
               <Route path="/macros" element={<MacrosPage />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/viandas-en-trelew" element={<LocalSeo />} />
             </Routes>
           </PageWrapper>
         </main>
+        <FloatingWhatsAppButton />
         <Footer />
       </div>
     </Router>
