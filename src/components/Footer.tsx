@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, MessageCircle, MapPin, Clock, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { Instagram, MessageCircle, MapPin, Clock, ShieldCheck } from 'lucide-react';
 import { CONFIG } from '../data/data';
 
 const Footer: React.FC = () => {
