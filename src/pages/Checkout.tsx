@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { CONFIG } from '../data/data';
 import { MapPin, Truck, Store, MessageCircle, AlertCircle, Trash2, ShoppingCart } from 'lucide-react';
@@ -70,7 +71,7 @@ const Checkout: React.FC = () => {
                         </div>
                         <h2 className="text-3xl font-black italic mb-4 uppercase">Tu carrito está vacío</h2>
                         <p className="text-nppro-gray mb-10">Agregá algunas viandas deliciosas para comenzar.</p>
-                        <a href="/menu" className="btn-primary">Ver Menú</a>
+                        <Link to="/menu" className="btn-primary">Ver Menú</Link>
                     </div>
                 </div>
             </div>
