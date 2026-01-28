@@ -110,7 +110,7 @@ const Footer: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-nppro-green uppercase font-black tracking-[0.2em] mb-1">Entregas</p>
-                                        <p className="text-white text-base font-medium">{CONFIG.DELIVERY_DAYS.join(' y ')}</p>
+                                        <p className="text-white text-base font-medium">Lunes - Viernes 8:00 - 18:00</p>
                                     </div>
                                 </div>
                             </div>
@@ -121,7 +121,7 @@ const Footer: React.FC = () => {
                 {/* Bottom Bar: Clean & Tech */}
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-xs font-bold tracking-widest text-white/30">
-                        <p>© {currentYear} NPPRO BRAND</p>
+                        <p>© {currentYear} NPPRO by Nutrición Profesional</p>
                         <span className="hidden md:block w-1 h-1 rounded-full bg-white/10"></span>
                         <p>TRELEW, CHUBUT, AR</p>
                     </div>
