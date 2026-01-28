@@ -27,8 +27,15 @@ const Navbar: React.FC = () => {
         }
     }, [isOpen]);
 
-    // Cerrar menú al navegar
-    useEffect(() => setIsOpen(false), [location]);
+    // 3. Animación del carrito
+    const [isAnimating, setIsAnimating] = useState(false);
+    useEffect(() => {
+        if (totalItems > 0) {
+            setIsAnimating(true);
+            const timer = setTimeout(() => setIsAnimating(false), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [totalItems]);
 
     const navLinks = [
         { name: 'Home', path: '/' },
@@ -42,8 +49,8 @@ const Navbar: React.FC = () => {
             {/* Main Header Container */}
             <header
                 className={`fixed top-0 left-0 right-0 z-[120] transition-all duration-300 ${scrolled || isOpen
-                        ? 'bg-[#0B0B0B]/95 backdrop-blur-md py-4 border-b border-white/5'
-                        : 'bg-transparent py-7'
+                    ? 'bg-[#0B0B0B]/95 backdrop-blur-md py-4 border-b border-white/5'
+                    : 'bg-transparent py-7'
                     }`}
             >
                 <div className="container mx-auto px-6 flex justify-between items-center">
@@ -75,7 +82,11 @@ const Navbar: React.FC = () => {
 
                         <div className="h-4 w-[1px] bg-white/20 mx-2" />
 
-                        <Link to="/checkout" className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded hover:bg-[#00FF00] hover:text-black transition-all group">
+                        <Link
+                            to="/checkout"
+                            id="cart-icon-desktop"
+                            className={`flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded hover:bg-[#00FF00] hover:text-black transition-all group ${isAnimating ? 'cart-animate' : ''}`}
+                        >
                             <ShoppingCart size={16} className="text-[#00FF00] group-hover:text-black" />
                             <span className="text-[10px] font-black uppercase">Carrito ({totalItems})</span>
                         </Link>
@@ -83,7 +94,11 @@ const Navbar: React.FC = () => {
 
                     {/* Mobile Toggle & Cart - Siempre encima (z-130) */}
                     <div className="md:hidden flex items-center gap-6 relative z-[130]">
-                        <Link to="/checkout" className="relative">
+                        <Link
+                            to="/checkout"
+                            id="cart-icon-mobile"
+                            className={`relative ${isAnimating ? 'cart-animate' : ''}`}
+                        >
                             <ShoppingCart size={24} className="text-white" />
                             {totalItems > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-[#00FF00] text-black text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">

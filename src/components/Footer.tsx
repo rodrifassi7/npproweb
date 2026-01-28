@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Instagram, MessageCircle, MapPin, Clock, ShieldCheck } from 'lucide-react';
 import { CONFIG } from '../data/data';
 
@@ -68,14 +69,19 @@ const Footer: React.FC = () => {
                             <span className="h-px flex-1 bg-gradient-to-r from-nppro-green/50 to-transparent"></span>
                         </h4>
                         <ul className="grid grid-cols-1 gap-y-4">
-                            {['Inicio', 'Menú semanal', 'Packs con descuento', 'Finalizar pedido'].map((item) => (
-                                <li key={item}>
-                                    <a href="#" className="group flex items-center text-white/40 hover:text-white transition-all duration-300">
+                            {[
+                                { label: 'Inicio', path: '/' },
+                                { label: 'Menú semanal', path: '/menu' },
+                                { label: 'Packs con descuento', path: '/packs' },
+                                { label: 'Finalizar pedido', path: '/checkout' }
+                            ].map((item) => (
+                                <li key={item.label}>
+                                    <Link to={item.path} className="group flex items-center text-white/40 hover:text-white transition-all duration-300">
                                         <div className="w-0 group-hover:w-6 h-[1px] bg-nppro-green transition-all duration-300" />
                                         <span className="group-hover:translate-x-2 transition-transform duration-300 font-medium">
-                                            {item}
+                                            {item.label}
                                         </span>
-                                    </a>
+                                    </Link>
                                 </li>
                             ))}
                         </ul>

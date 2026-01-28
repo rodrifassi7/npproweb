@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BicepsFlexed, Flame, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 import type { Product } from '../../types';
 
 interface DailySpecialSectionProps {
@@ -9,6 +9,23 @@ interface DailySpecialSectionProps {
 }
 
 const DailySpecialSection: React.FC<DailySpecialSectionProps> = ({ dailySpecial }) => {
+    const { addToCart } = useCart();
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    const handleAddToCart = () => {
+        addToCart(dailySpecial, { useVacuum: false });
+        if (buttonRef.current) {
+            import('../../utils/flyToCart').then(({ flyToCart }) => {
+                flyToCart(
+                    buttonRef.current!,
+                    '#cart-icon-desktop',
+                    '#cart-icon-mobile',
+                    dailySpecial.image
+                );
+            });
+        }
+    };
+
     return (
         <section className="py-32 md:py-48 relative overflow-hidden bg-[#070707]">
             <div className="container mx-auto px-6 relative z-10">
@@ -89,12 +106,13 @@ const DailySpecialSection: React.FC<DailySpecialSectionProps> = ({ dailySpecial 
 
                             {/* Botón CTA */}
                             <div className="flex flex-col sm:flex-row items-center gap-6">
-                                <Link
-                                    to="/menu"
+                                <button
+                                    ref={buttonRef}
+                                    onClick={handleAddToCart}
                                     className="group relative px-10 py-4 bg-white text-black font-black italic rounded-full text-sm transition-all hover:bg-nppro-green hover:scale-105"
                                 >
                                     AGREGAR AL PEDIDO
-                                </Link>
+                                </button>
                                 <span className="text-2xl font-black italic text-white/80">${dailySpecial.price}</span>
                             </div>
                         </motion.div>

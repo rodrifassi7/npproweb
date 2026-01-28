@@ -12,6 +12,22 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
     const { addToCart } = useCart();
 
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    const handleAddToCart = () => {
+        addToCart(product, { useVacuum: false });
+        if (buttonRef.current) {
+            import('../utils/flyToCart').then(({ flyToCart }) => {
+                flyToCart(
+                    buttonRef.current!,
+                    '#cart-icon-desktop',
+                    '#cart-icon-mobile',
+                    product.image
+                );
+            });
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -82,7 +98,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
                             <Info size={16} /> Más info
                         </button>
                         <button
-                            onClick={() => addToCart(product, { useVacuum: false })}
+                            ref={buttonRef}
+                            onClick={handleAddToCart}
                             className="w-12 h-12 bg-nppro-green rounded-2xl flex items-center justify-center hover:brightness-110 active:scale-95 transition-all text-black shadow-[0_0_20px_rgba(0,255,157,0.2)]"
                         >
                             <Plus size={24} strokeWidth={3} />
