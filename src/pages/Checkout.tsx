@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { CONFIG } from '../data/data';
-import { MapPin, Truck, Store, MessageCircle, AlertCircle, Trash2, ShoppingCart } from 'lucide-react';
+import { MapPin, Truck, Store, MessageCircle, AlertCircle, Trash2, ShoppingCart, Ticket, Loader2, X } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const Checkout: React.FC = () => {
     const { cart, subtotal, packDiscount, total, vacuumTotal, removeFromCart, currentDiscountTier } = useCart();
     const [formData, setFormData] = useState({
         name: '',
+        phone: '',
         deliveryType: 'envio', // 'envio' | 'retiro'
         address: '',
         references: '',
@@ -16,6 +18,111 @@ const Checkout: React.FC = () => {
         notes: '',
         useVacuumGlobal: false
     });
+
+    // Coupon State
+    const [couponCode, setCouponCode] = useState('');
+    const [couponStatus, setCouponStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
+    const [couponMessage, setCouponMessage] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent: number } | null>(null);
+
+    // Calculated values
+    const foodNetTotal = subtotal - packDiscount;
+    const couponDiscountAmount = appliedCoupon ? Math.round(foodNetTotal * (appliedCoupon.percent / 100)) : 0;
+    const finalTotal = total - couponDiscountAmount;
+
+    // Supabase Validation
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponStatus('validating');
+        setCouponMessage('');
+
+        try {
+            // RPC call to validate_coupon
+            const { data, error } = await supabase.rpc('validate_coupon', {
+                input_code: couponCode,
+                input_phone: formData.phone || null
+                // FIXME: The user doesn't strictly input "Phone", we have Name/Address. 
+                // We should probably ask for Phone in the form if we want per-customer limits? 
+                // For now, passing null to skip phone check unless we add phone field.
+                // Assuming user wants to enforce it on "Customer Identity" which usually needs phone/email.
+            });
+
+            if (error) throw error;
+
+            if (data.valid) {
+                // Check if it's the exact same code
+                if (appliedCoupon?.code === data.code) {
+                    setCouponStatus('success');
+                    return;
+                }
+
+                setAppliedCoupon({ code: data.code, percent: data.percent });
+                setCouponStatus('success');
+                setCouponMessage(data.message);
+            } else {
+                setAppliedCoupon(null);
+                setCouponStatus('error');
+                setCouponMessage(data.message);
+            }
+        } catch (err) {
+            console.error('Coupon error:', err);
+            setAppliedCoupon(null);
+            setCouponStatus('error');
+            setCouponMessage('Error al validar cupón');
+        }
+    };
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleCheckout = async () => {
+        setIsSubmitting(true);
+        try {
+            // 1. Create Order in Supabase
+            const orderData = {
+                customer_name: formData.name,
+                customer_phone: formData.phone,
+                delivery_type: formData.deliveryType,
+                address: formData.deliveryType === 'envio' ? formData.address : CONFIG.PICKUP_ADDRESS,
+                references: formData.references,
+                delivery_day: formData.deliveryDay,
+                payment_method: formData.paymentMethod,
+                notes: formData.notes,
+                items: cart, // Supabase handles JSONB
+                subtotal: subtotal,
+                total: finalTotal,
+                delivery_cost: 0, // Not tracked separately in cart current logic, usually in 'total' or separate
+                coupon_code: appliedCoupon?.code || null,
+                discount_amount: couponDiscountAmount,
+                discount_percent: appliedCoupon?.percent || 0,
+                // created_at default now()
+            };
+
+            const { error } = await supabase.from('orders').insert([orderData]);
+
+            if (error) {
+                console.error("Order save error:", error);
+                // Decide: Block or warn? For now, we alert and proceed to WhatsApp anyway as fallback?
+                // Or we throw to block? User requested "Order Tracking", implies DB is important.
+                alert("Hubo un error guardando el pedido. Por favor, reportalo al enviar el WhatsApp.");
+            }
+
+            // 2. Open WhatsApp
+            generateWhatsAppLink();
+
+        } catch (e) {
+            console.error(e);
+            generateWhatsAppLink(); // Fallback
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const removeCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCode('');
+        setCouponStatus('idle');
+        setCouponMessage('');
+    };
 
     const { clearCart } = useCart();
 
@@ -32,6 +139,7 @@ const Checkout: React.FC = () => {
 
         let message = `*NUEVO PEDIDO NPPRO*\n\n`;
         message += `👤 *Nombre:* ${name}\n`;
+        if (formData.phone) message += `📱 *Tel:* ${formData.phone}\n`;
         message += `🚚 *Tipo:* ${deliveryType === 'envio' ? 'Envío a domicilio' : 'Retiro en local'}\n`;
 
         if (deliveryType === 'envio') {
@@ -54,8 +162,9 @@ const Checkout: React.FC = () => {
         message += `\n*RESUMEN TOTAL:*\n`;
         message += `Subtotal: $${subtotal}\n`;
         if (packDiscount > 0) message += `Descuento Pack (${Math.round(currentDiscountTier?.discount! * 100)}%): -$${packDiscount}\n`;
+        if (appliedCoupon) message += `🎟️ Cupón (${appliedCoupon.code}): -$${couponDiscountAmount}\n`;
         if (vacuumTotal > 0) message += `Extra Vacío: $${vacuumTotal}\n`;
-        message += `*TOTAL FINAL: $${total}*\n`;
+        message += `*TOTAL FINAL: $${finalTotal}*\n`;
 
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
@@ -100,6 +209,17 @@ const Checkout: React.FC = () => {
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         placeholder="Ej: Juan Pérez"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-nppro-green/50 transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-2 ml-1">Teléfono (WhatsApp)</label>
+                                    <input
+                                        type="tel"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleInputChange}
+                                        placeholder="Ej: 11 1234 5678"
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-nppro-green/50 transition-all"
                                     />
                                 </div>
@@ -281,21 +401,82 @@ const Checkout: React.FC = () => {
                                     <span>Extra al vacío</span>
                                     <span>+${vacuumTotal}</span>
                                 </div>
+
+                                {/* Coupon Section */}
+                                <div className="pt-4 border-t border-white/10 space-y-3">
+                                    {!appliedCoupon ? (
+                                        <div className="space-y-2">
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-nppro-gray" size={16} />
+                                                    <input
+                                                        type="text"
+                                                        value={couponCode}
+                                                        onChange={(e) => setCouponCode(e.target.value)}
+                                                        placeholder="Código de descuento"
+                                                        className="w-full bg-black/20 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-nppro-green/50"
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={handleApplyCoupon}
+                                                    disabled={!couponCode || couponStatus === 'validating'}
+                                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                                                >
+                                                    {couponStatus === 'validating' ? <Loader2 className="animate-spin" size={16} /> : 'Aplicar'}
+                                                </button>
+                                            </div>
+                                            {couponStatus === 'error' && (
+                                                <p className="text-xs text-red-500 font-bold ml-1">{couponMessage}</p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="bg-nppro-green/10 border border-nppro-green/30 rounded-xl p-3 flex items-center justify-between">
+                                            <div>
+                                                <div className="text-nppro-green font-bold text-sm flex items-center gap-2">
+                                                    <Ticket size={14} /> {appliedCoupon.code}
+                                                </div>
+                                                <div className="text-xs text-nppro-green/80 font-medium">
+                                                    {appliedCoupon.percent}% OFF aplicado
+                                                </div>
+                                            </div>
+                                            <button onClick={removeCoupon} className="text-nppro-green/60 hover:text-nppro-green transition-colors">
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {appliedCoupon && (
+                                        <div className="flex justify-between text-nppro-green font-bold">
+                                            <span>Descuento Cupón</span>
+                                            <span>-${couponDiscountAmount}</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="pt-4 border-t border-white/10 flex justify-between items-end">
                                     <div className="font-black italic uppercase text-lg tracking-tighter">TOTAL A PAGAR</div>
                                     <div className="text-3xl font-black text-nppro-green shadow-green-500/20 drop-shadow-sm">
-                                        ${total}
+                                        ${finalTotal}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="p-8">
                                 <button
-                                    disabled={!formData.name || (formData.deliveryType === 'envio' && !formData.address)}
-                                    onClick={generateWhatsAppLink}
-                                    className="btn-primary w-full py-5 text-lg shadow-xl shadow-nppro-green/20 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                                    disabled={!formData.name || (formData.deliveryType === 'envio' && !formData.address) || isSubmitting}
+                                    onClick={handleCheckout}
+                                    className="btn-primary w-full py-5 text-lg shadow-xl shadow-nppro-green/20 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3"
                                 >
-                                    Confirmar por WhatsApp <MessageCircle size={24} />
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={24} />
+                                            <span>Procesando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            Confirmar por WhatsApp <MessageCircle size={24} />
+                                        </>
+                                    )}
                                 </button>
                                 <div className="flex items-center gap-2 justify-center mt-6 text-[10px] text-nppro-gray font-black uppercase tracking-[0.2em]">
                                     <AlertCircle size={12} /> Coordinamos el pago por privado
