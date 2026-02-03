@@ -9,7 +9,7 @@ const FAQSection: React.FC = () => {
     const faqs = [
         {
             q: "¿Qué días entregan?",
-            a: "Entregamos en Trelew todos los días. Una vez que realices tu pedido, nos comunicamos con vos para coordinar la entrega que mejor te quede."
+            a: "Entregamos en Trelew los días Lunes y Miercoles. Una vez que realices tu pedido, nos comunicamos con vos para coordinar la entrega que mejor te quede."
         },
         {
             q: "¿Cómo se pagan los pedidos?",
