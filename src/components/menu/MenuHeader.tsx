@@ -11,7 +11,7 @@ const MenuHeader: React.FC = () => {
                 Nuestro <span className="text-white/20">Combustible</span>
             </h1>
             <p className="text-white/40 max-w-xl text-sm md:text-base font-light leading-relaxed">
-                Seleccioná tus platos individuales o armá tu estructura semanal.
+                Seleccioná tus platos individuales o armá tu pack semanal.
                 Los descuentos se aplican automáticamente según el volumen de carga.
             </p>
         </header>
