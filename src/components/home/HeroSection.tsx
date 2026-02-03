@@ -34,7 +34,7 @@ const HeroSection: React.FC = () => {
                     >
                         <Activity size={12} className="text-nppro-green animate-pulse" />
                         <span className="text-white/60 text-[9px] md:text-xs font-bold tracking-[0.3em] uppercase font-mono">
-                            System Status: Optimized
+                            System Status: PRUEBA FINAL O ELIMINACION
                         </span>
                     </motion.div>
 
