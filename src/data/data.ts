@@ -19,9 +19,9 @@ export const CONFIG: AppConfig = {
     VACUUM_PRICE_PER_ITEM: 200,
     vacuumExtraPrice: 200,
     DISCOUNT_TIERS: [
-        { min: 5, max: 9, discount: 0.05 },
-        { min: 10, max: 14, discount: 0.1 },
-        { min: 15, max: 100, discount: 0.15 },
+
+        { min: 10, max: 999, discount: 0.05 },
+
     ],
 };
 
