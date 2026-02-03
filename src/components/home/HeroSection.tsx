@@ -77,7 +77,7 @@ const HeroSection: React.FC = () => {
 
                         <Link to="/packs" className="flex items-center gap-2 text-white/50 hover:text-nppro-green font-black tracking-[0.2em] text-[10px] md:text-xs py-3 group">
                             <Target size={16} className="text-nppro-green" />
-                            ARMAR PACK
+                            ARMAR TU PACK
                         </Link>
                     </motion.div>
                 </motion.div>
