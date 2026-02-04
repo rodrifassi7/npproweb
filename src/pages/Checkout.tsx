@@ -283,20 +283,7 @@ const Checkout: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="mt-8">
-                                <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-3 ml-1">Día de entrega/retiro</label>
-                                <div className="flex flex-wrap gap-3">
-                                    {CONFIG.DELIVERY_DAYS.map(day => (
-                                        <button
-                                            key={day}
-                                            onClick={() => setFormData(prev => ({ ...prev, deliveryDay: day }))}
-                                            className={`px-6 py-3 rounded-full text-sm font-bold border transition-all ${formData.deliveryDay === day ? 'bg-white text-black border-white' : 'bg-transparent border-white/10 text-nppro-gray hover:text-white'}`}
-                                        >
-                                            {day}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+
                         </div>
 
                         {/* Payment & Extras */}
