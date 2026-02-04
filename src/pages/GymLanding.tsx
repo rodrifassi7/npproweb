@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Dumbbell, Clock, Flame, ChevronRight, Copy, Check, Zap, Trophy } from 'lucide-react';
+import { Clock, Flame, ChevronRight, Copy, Check, Zap, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const GymLanding: React.FC = () => {
