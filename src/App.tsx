@@ -12,6 +12,7 @@ import ScrollToTop from './components/ScrollToTop';
 import FloatingWhatsAppButton from './components/common/FloatingWhatsAppButton';
 
 import LocalSeo from './pages/LocalSeo';
+import GymLanding from './pages/GymLanding';
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -45,6 +46,7 @@ function App() {
               <Route path="/macros" element={<MacrosPage />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/viandas-en-trelew" element={<LocalSeo />} />
+              <Route path="/gym" element={<GymLanding />} />
             </Routes>
           </PageWrapper>
         </main>

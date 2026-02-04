@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { MENU, CONFIG } from '../data/data';
-import { Minus, Plus, ShoppingCart, Info, ShieldCheck, Flame, Scale, Send } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Info, ShieldCheck, Flame, Scale } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductDetailModal from '../components/menu/ProductDetailModal';
-import { createWhatsAppLink } from '../utils/whatsapp';
 import type { Product } from '../types';
 
 const PackBuilder: React.FC = () => {
@@ -44,24 +44,10 @@ const PackBuilder: React.FC = () => {
         }
     };
 
-    const handleWhatsAppOrder = () => {
-        const items = packItems.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            vacuum: item.useVacuum
-        }));
+    const navigate = useNavigate();
 
-        // PHONE NUMBER: Using config
-        const PHONE = CONFIG.WHATSAPP_NUMBER;
-
-        const link = createWhatsAppLink(
-            PHONE,
-            packType,
-            items,
-            total,
-            currentDiscountTier?.discount
-        );
-        window.open(link, '_blank');
+    const handleContinueToCheckout = () => {
+        navigate('/checkout');
     };
 
     return (
@@ -133,34 +119,6 @@ const PackBuilder: React.FC = () => {
 
                                         {/* Macros Quick View */}
                                         <div className="flex items-center gap-4">
-                                            {/* Price hidden/commented as per general requirement, verify if needed here. 
-                                                User said "Remove/hide the price on the menu cards". 
-                                                Here it is a list. I will keep price small or hide it? 
-                                                The previous code showed price. I will keep it for now as it's a builder 
-                                                but make it consistent. 
-                                                WAIT: "Remove/hide the price on the menu cards". 
-                                                This is a "builder card". I'll keep the price as it's crucial for totals, 
-                                                but I can make it subtle. Actually, the total relies on it. 
-                                                I'll leave it but maybe make it less prominent if requested, 
-                                                but functionality-wise it's needed for the $Subtotal logic.
-                                                However, user said "until costs/pricing are ready". 
-                                                IF costs are not ready, maybe I should hide it here too?
-                                                "Show macros on each card". I will emphasize macros.
-                                             */}
-                                            {/* Re-evaluating: If price is hidden on cards, user implies pricing is not final. 
-                                                But the cart calculates totals. 
-                                                The user asked to hide price on "Menu cards". 
-                                                I will hide unit price here too to be consistent, OR show "Consultar".
-                                                BUT, the cart works with prices. 
-                                                For now I'll keep the price here because the Cart Sidebar SHOWS totals. 
-                                                If I hide it here, totals become magical. 
-                                                User goal: "Replace any broken checkout flow with WhatsApp ordering". 
-                                                WhatsApp order includes "Total items", checking plan... "Valor aprox". 
-                                                So prices ARE used. 
-                                                I will keep the price here but maybe emphasize macros more.
-                                             */}
-                                            {/* <span className="text-nppro-green font-black">${product.price}</span> */}
-                                            {/* I will keep it visible as the logic uses it. */}
                                             <span className="text-nppro-green font-black">${product.price}</span>
 
                                             {product.macros && (
@@ -251,15 +209,15 @@ const PackBuilder: React.FC = () => {
                                 </div>
 
                                 <button
-                                    onClick={handleWhatsAppOrder}
+                                    onClick={handleContinueToCheckout}
                                     disabled={totalPackQuantity === 0}
                                     className="btn-primary w-full py-4 text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Send size={18} /> Pedir por WhatsApp
+                                    Continuar al Pago <ShoppingCart size={18} />
                                 </button>
 
                                 <p className="text-[10px] text-nppro-gray text-center uppercase tracking-widest font-bold">
-                                    Sin pago online • Coordinación directa
+                                    Envío y cupones en el próximo paso
                                 </p>
                             </div>
                         </div>
