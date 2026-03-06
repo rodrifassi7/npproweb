@@ -15,12 +15,15 @@ interface CartContextType {
     vacuumTotal: number;
     total: number;
     currentDiscountTier: DiscountTier | null;
+    selectedPremadePack: 'starter' | 'elite' | null;
+    setSelectedPremadePack: (pack: 'starter' | 'elite' | null) => void;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 const STORAGE_KEY = 'nppro_cart_v1';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [selectedPremadePack, setSelectedPremadePack] = useState<'starter' | 'elite' | null>(null);
     const [cart, setCart] = useState<CartItem[]>(() => {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -79,7 +82,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
     };
 
-    const clearCart = () => setCart([]);
+    const clearCart = () => {
+        setCart([]);
+        setSelectedPremadePack(null);
+    };
 
     // CALCULATIONS
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -98,13 +104,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         item.packEligible ? acc + item.price * item.quantity : acc, 0
     );
 
-    const packDiscount = currentDiscountTier ? eligibleSubtotal * currentDiscountTier.discount : 0;
+    const packDiscount = (selectedPremadePack || !currentDiscountTier) ? 0 : eligibleSubtotal * currentDiscountTier.discount;
 
     const vacuumTotal = cart.reduce((acc, item) =>
         item.useVacuum ? acc + (CONFIG.vacuumExtraPrice || 200) * item.quantity : acc, 0
     );
 
-    const total = subtotal - packDiscount + vacuumTotal;
+    let total = subtotal - packDiscount + vacuumTotal;
+
+    if (selectedPremadePack === 'starter') {
+        total = 49000;
+    } else if (selectedPremadePack === 'elite') {
+        total = 95000;
+    }
 
     return (
         <CartContext.Provider
@@ -120,6 +132,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 vacuumTotal,
                 total,
                 currentDiscountTier,
+                selectedPremadePack,
+                setSelectedPremadePack,
             }}
         >
             {children}

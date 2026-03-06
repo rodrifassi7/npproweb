@@ -3,9 +3,12 @@ export const createWhatsAppLink = (
     packType: 'volumen' | 'definicion',
     items: { name: string; quantity: number; vacuum?: boolean }[],
     totalPrice: number,
-    discount?: number
+    discount?: number,
+    premadePackName?: string
 ): string => {
-    let message = `Hola! 👋 Quiero pedir un *Pack de ${packType === 'volumen' ? 'Volumen' : 'Definición'}*:\n\n`;
+    let message = premadePackName
+        ? `¡Hola! 👋 Quiero pedir el *${premadePackName}*:\n\n`
+        : `¡Hola! 👋 Quiero pedir un *Pack de ${packType === 'volumen' ? 'Volumen' : 'Definición'}*:\n\n`;
 
     items.forEach(item => {
         message += `• ${item.quantity}x ${item.name}`;
@@ -19,7 +22,7 @@ export const createWhatsAppLink = (
         message += `\n*Descuento aplicado:* ${discount * 100}%`;
     }
 
-    message += `\n*Valor aprox:* $${totalPrice}`;
+    message += `\n*Valor total:* $${totalPrice.toLocaleString('es-AR')}`;
     message += `\n\nQuisiera coordinar el envío y pago. Gracias!`;
 
     const encodedMessage = encodeURIComponent(message);

@@ -211,3 +211,35 @@ export const MENU: Product[] = [
         tags: ['Cena'],
     },
 ];
+
+export const PREMADE_PACKS = {
+    starter: {
+        name: 'Pack Pro Starter',
+        mealsCount: 5,
+        price: 49000,
+        items: [
+            { id: 'm1', qty: 1 },
+            { id: 'm3', qty: 1 },
+            { id: 'm5', qty: 1 },
+            { id: 'm7', qty: 1 },
+            { id: 'm4', qty: 1 }
+        ]
+    },
+    elite: {
+        name: 'Pack Pro Elite',
+        mealsCount: 10,
+        price: 95000,
+        isMostPopular: true,
+        freeShipping: true,
+        items: [
+            { id: 'm1', qty: 1 },
+            { id: 'm2', qty: 1 },
+            { id: 'm5', qty: 1 },
+            { id: 'm4', qty: 2 },
+            { id: 'm3', qty: 1 },
+            { id: 'm7', qty: 2 },
+            { id: 'm8', qty: 1 },
+            { id: 'm10', qty: 1 }
+        ]
+    }
+};
