@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { MENU, CONFIG, PREMADE_PACKS } from '../data/data';
 import { Minus, Plus, ShoppingCart, Info, ShieldCheck, Flame, Scale, Send, Sparkles, Truck } from 'lucide-react';
