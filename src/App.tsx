@@ -13,6 +13,7 @@ import FloatingWhatsAppButton from './components/common/FloatingWhatsAppButton';
 
 import LocalSeo from './pages/LocalSeo';
 import GymLanding from './pages/GymLanding';
+import FrozenLanding from './pages/FrozenLanding';
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -47,6 +48,7 @@ function App() {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/viandas-en-trelew" element={<LocalSeo />} />
               <Route path="/gym" element={<GymLanding />} />
+              <Route path="/frozen" element={<FrozenLanding />} />
             </Routes>
           </PageWrapper>
         </main>

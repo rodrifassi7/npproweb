@@ -83,6 +83,15 @@ const Navbar: React.FC = () => {
                         <div className="h-4 w-[1px] bg-white/20 mx-2" />
 
                         <Link
+                            to="/frozen"
+                            className="frozen-nav-btn px-4 py-2 rounded font-black text-[10px] uppercase tracking-widest text-cyan-100 flex items-center gap-2"
+                        >
+                            FROZEN <span className="text-[8px] border border-cyan-500/30 bg-cyan-900/40 px-1.5 py-0.5 rounded text-cyan-200">Pronto</span>
+                        </Link>
+
+                        <div className="h-4 w-[1px] bg-white/20 mx-2" />
+
+                        <Link
                             to="/checkout"
                             id="cart-icon-desktop"
                             className={`flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded hover:bg-[#00FF00] hover:text-black transition-all group ${isAnimating ? 'cart-animate' : ''}`}
@@ -143,6 +152,20 @@ const Navbar: React.FC = () => {
                                     </Link>
                                 </motion.div>
                             ))}
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                            >
+                                <Link
+                                    to="/frozen"
+                                    onClick={() => setIsOpen(false)}
+                                    className="text-5xl font-black uppercase tracking-tighter text-cyan-200 flex items-center gap-4"
+                                >
+                                    FROZEN
+                                    <span className="text-xs border border-cyan-500/30 bg-cyan-900/40 px-2 py-1 rounded text-cyan-200 tracking-widest mt-2">Pronto</span>
+                                </Link>
+                            </motion.div>
                         </nav>
 
                         <motion.div
