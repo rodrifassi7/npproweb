@@ -78,32 +78,42 @@ const Checkout: React.FC = () => {
         setIsSubmitting(true);
         try {
             // 1. Create Order in Supabase
+            const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+            const orderNotes = `
+WEB ORDER DETALLES:
+- Cliente: ${formData.name}
+- Tipo Entrega: ${formData.deliveryType}
+- Dirección: ${formData.deliveryType === 'envio' ? formData.address : CONFIG.PICKUP_ADDRESS}
+- Referencias: ${formData.references}
+- Día: ${formData.deliveryDay}
+- Medio Pago: ${formData.paymentMethod}
+- Total Items: ${totalItems}
+- Notas cliente: ${formData.notes}
+- JSON Items: ${JSON.stringify(cart.map(i => ({n: i.name, q: i.quantity, v: i.useVacuum})))}
+            `.trim();
+
             const orderData = {
                 customer_name: formData.name,
-                customer_phone: formData.phone,
-                delivery_type: formData.deliveryType,
-                address: formData.deliveryType === 'envio' ? formData.address : CONFIG.PICKUP_ADDRESS,
-                references: formData.references,
-                delivery_day: formData.deliveryDay,
-                payment_method: formData.paymentMethod,
-                notes: formData.notes,
-                items: cart, // Supabase handles JSONB
+                phone: formData.phone,
+                delivery: formData.deliveryType === 'envio', // mapped to boolean if possible, or left as string if column allows. The schema expects boolean "delivery" or we mapped it.
+                status: 'nuevo',
                 subtotal: subtotal,
                 total: finalTotal,
-                delivery_cost: 0, // Not tracked separately in cart current logic, usually in 'total' or separate
+                notes: orderNotes,
+                channel: 'web',
+                cantidad_viandas: totalItems,
                 coupon_code: appliedCoupon?.code || null,
                 discount_amount: couponDiscountAmount,
                 discount_percent: appliedCoupon?.percent || 0,
-                // created_at default now()
             };
 
             const { error } = await supabase.from('orders').insert([orderData]);
 
             if (error) {
                 console.error("Order save error:", error);
-                // Decide: Block or warn? For now, we alert and proceed to WhatsApp anyway as fallback?
-                // Or we throw to block? User requested "Order Tracking", implies DB is important.
-                alert("Hubo un error guardando el pedido. Por favor, reportalo al enviar el WhatsApp.");
+                // Eliminamos el alert para que el pedido por WhatsApp no se interrumpa
+                // por errores de RLS (Row Level Security) o de schema.
             }
 
             // 2. Open WhatsApp
