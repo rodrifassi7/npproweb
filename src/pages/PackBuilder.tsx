@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useCart } from '../context/CartContext';
 import { MENU, CONFIG, PREMADE_PACKS } from '../data/data';
-import { Minus, Plus, ShoppingCart, Info, ShieldCheck, Flame, Scale, Send, Sparkles, Truck } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ProductDetailModal from '../components/menu/ProductDetailModal';
+import { ShoppingCart, ShieldCheck, Flame, Send, Sparkles, Truck, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import PremadePackCard from '../components/menu/PremadePackCard';
 import { createWhatsAppLink } from '../utils/whatsapp';
-import type { Product } from '../types';
 
 const PackBuilder: React.FC = () => {
     const {
         cart,
         addToCart,
-        updateQuantity,
-        removeFromCart,
         clearCart,
-        currentDiscountTier,
         subtotal,
         packDiscount,
         total,
@@ -23,41 +18,14 @@ const PackBuilder: React.FC = () => {
         setSelectedPremadePack
     } = useCart();
 
-    const [packType, setPackType] = useState<'volumen' | 'definicion'>('volumen');
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const packItems = cart.filter((item: any) => item.packEligible);
 
-    const eligibleProducts = MENU.filter(p => p.packEligible);
-    const packItems = cart.filter(item => item.packEligible);
-    const totalPackQuantity = packItems.reduce((acc, item) => acc + item.quantity, 0);
-
-    const nextTier = CONFIG.DISCOUNT_TIERS.find(t => t.min > totalPackQuantity);
-    const progress = nextTier ? (totalPackQuantity / nextTier.min) * 100 : 100;
-
-    const handleAdjust = (productId: string, delta: number) => {
-        if (selectedPremadePack) setSelectedPremadePack(null);
-        const itemKey = `${productId}_std`;
-        const existing = cart.find(item => item.key === itemKey);
-
-        if (!existing) {
-            if (delta > 0) {
-                const product = MENU.find(p => p.id === productId)!;
-                addToCart(product, { useVacuum: false });
-            }
-            return;
-        }
-
-        const newQty = existing.quantity + delta;
-        if (newQty <= 0) {
-            removeFromCart(itemKey);
-        } else {
-            updateQuantity(itemKey, newQty);
-        }
-    };
-
-    const handleAddPremadePack = (type: 'starter' | 'elite') => {
+    const handleAddPremadePack = (type: string) => {
         clearCart();
         const pack = PREMADE_PACKS[type];
-        pack.items.forEach(item => {
+        if (!pack) return;
+
+        pack.items.forEach((item: { id: string, qty: number }) => {
             const product = MENU.find(p => p.id === item.id);
             if (product) {
                 for (let i = 0; i < item.qty; i++) {
@@ -66,9 +34,6 @@ const PackBuilder: React.FC = () => {
             }
         });
         setSelectedPremadePack(type);
-        if (window.innerWidth < 1024) {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
     };
 
     const handleWhatsAppOrder = () => {
@@ -78,288 +43,244 @@ const PackBuilder: React.FC = () => {
             vacuum: item.useVacuum
         }));
 
-        // PHONE NUMBER: Using config
         const PHONE = CONFIG.WHATSAPP_NUMBER;
+        const objective = selectedPremadePack?.includes('mass') ? 'volumen' : 'definicion';
+        const link = createWhatsAppLink(PHONE, objective, items, total, packDiscount > 0 ? (packDiscount / subtotal) : 0);
 
-        const link = createWhatsAppLink(
-            PHONE,
-            packType,
-            items,
-            total,
-            currentDiscountTier?.discount
-        );
         window.open(link, '_blank');
     };
 
+    const scrollToSection = (id: string) => {
+        const element = document.getElementById(id);
+        if (element) {
+            const offset = 100; // Espacio para el navbar fijo si tienes uno
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const elementRect = element.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            const offsetPosition = elementPosition - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    const packTitles: Record<string, string> = {
+        'mass5': 'Pack Mass x5',
+        'mass10': 'Pack Mass x10',
+        'lean5': 'Pack Lean x5',
+        'lean10': 'Pack Lean x10'
+    };
+
     return (
-        <div className="pt-24 pb-24 min-h-screen bg-[#050505] text-white">
+        <div className="pt-24 pb-24 min-h-screen bg-[#050505] text-white font-sans">
             <div className="container mx-auto px-6">
 
-                {/* Header Estilo Editorial */}
-                <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-12">
-                    <div className="max-w-3xl">
-                        <div className="flex items-center gap-2 text-nppro-green mb-4">
-                            <span className="h-px w-8 bg-nppro-green"></span>
-                            <span className="text-xs font-black uppercase tracking-[0.3em]">Build Your Performance</span>
+                {/* Header Principal */}
+                <header className="mb-10 border-b border-white/5 pb-10">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                        <div>
+                            <div className="flex items-center gap-2 text-nppro-green mb-4">
+                                <span className="h-px w-8 bg-nppro-green"></span>
+                                <span className="text-xs font-black uppercase tracking-[0.3em]">Performance Meal Prep</span>
+                            </div>
+                            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
+                                Elegí tu <span className="text-nppro-green">Pack</span>
+                            </h1>
                         </div>
-                        <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">
-                            Elegí tu <span className="text-nppro-green">Pack</span>
-                        </h1>
-                        <p className="text-white/50 mt-6 text-lg md:text-xl font-medium leading-relaxed">
-                            Diseñado para atletas. Seleccioná una configuración predeterminada o personalizá cada caloría de tu semana.
-                        </p>
+
+                        {/* Quick Nav para evitar la "Falsa Base" */}
+                        <div className="flex gap-3 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
+                            <button
+                                onClick={() => scrollToSection('lean-section')}
+                                className="px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 hover:bg-white/10 transition-colors text-white"
+                            >
+                                <Flame size={16} /> Definición
+                            </button>
+                            <button
+                                onClick={() => scrollToSection('mass-section')}
+                                className="px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 hover:bg-white/10 transition-colors text-nppro-green"
+                            >
+                                <Zap size={16} /> Volumen
+                            </button>
+                        </div>
                     </div>
                 </header>
 
-                {/* 1. PREMADE PACKS - Tarjetas más limpias */}
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-32">
-                    <PremadePackCard
-                        type="starter"
-                        {...PREMADE_PACKS.starter}
-                        onAdd={() => handleAddPremadePack('starter')}
-                    />
-                    <PremadePackCard
-                        type="elite"
-                        {...PREMADE_PACKS.elite}
-                        onAdd={() => handleAddPremadePack('elite')}
-                    />
-                </section>
+                <div className="flex flex-col lg:flex-row gap-12">
 
-                {/* Sub-header con Selector de Objetivo */}
-                <div id="builder-section" className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
-                    <div>
-                        <h2 className="text-3xl font-black italic uppercase tracking-tight">Armado Personalizado</h2>
-                        <p className="text-nppro-gray text-sm uppercase font-bold tracking-widest mt-1">Selección individual de viandas</p>
+                    {/* SECCIÓN DE PACKS PREDEFINIDOS */}
+                    <div className="flex-1 space-y-20">
+
+                        {/* Fila Lean */}
+                        <div id="lean-section" className="scroll-mt-24">
+                            {/* Títulos Centrados */}
+                            <div className="flex flex-col items-center justify-center text-center mb-10">
+                                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white mb-4 shadow-lg">
+                                    <Flame size={32} />
+                                </div>
+                                <h2 className="text-4xl font-black italic uppercase tracking-tighter">Objetivo: Definición</h2>
+                                <p className="text-white/40 text-xs font-bold uppercase tracking-[0.2em] mt-2">Déficit calórico • Retención muscular</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                <PremadePackCard
+                                    variant="lean"
+                                    type="lean5"
+                                    name="Pack Lean x5"
+                                    description="Corte y definición"
+                                    price={45000}
+                                    onAdd={() => handleAddPremadePack('lean5')}
+                                    totalKcal="~2.395"
+                                    totalProt="~246g"
+                                    items={[
+                                        { name: "Carne Estilo Oriental", kcal: 490, prot: 48 },
+                                        { name: "Carne Asada con Verduras", kcal: 430, prot: 50 },
+                                        { name: "NPPRO Rice", kcal: 505, prot: 50 },
+                                        { name: "Lemon Chicken", kcal: 480, prot: 52 },
+                                        { name: "Cerdo con Batata y Repollo", kcal: 490, prot: 46 },
+                                    ]}
+                                />
+                                <PremadePackCard
+                                    variant="lean"
+                                    type="lean10"
+                                    name="Pack Lean x10"
+                                    description="Plan semanal extremo"
+                                    price={90000}
+                                    onAdd={() => handleAddPremadePack('lean10')}
+                                    totalKcal="~4.830"
+                                    totalProt="~480g"
+                                    items={[
+                                        { name: "Carne Oriental", qty: 2, kcal: 980, prot: 96 },
+                                        { name: "Carne Asada", qty: 2, kcal: 860, prot: 100 },
+                                        { name: "NPPRO Rice", qty: 2, kcal: 1010, prot: 100 },
+                                        { name: "Lemon Chicken", qty: 2, kcal: 960, prot: 104 },
+                                        { name: "Mix Cerdo & Bondiola", qty: 2, kcal: 1020, prot: 90 },
+                                    ]}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Divisor Visual */}
+                        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                        {/* Fila Mass */}
+                        <div id="mass-section" className="scroll-mt-24">
+                            {/* Títulos Centrados */}
+                            <div className="flex flex-col items-center justify-center text-center mb-10">
+                                <div className="w-16 h-16 rounded-full bg-nppro-green/10 border border-nppro-green/20 flex items-center justify-center text-nppro-green mb-4 shadow-[0_0_30px_rgba(22,163,74,0.2)]">
+                                    <Zap size={32} />
+                                </div>
+                                <h2 className="text-4xl font-black italic uppercase tracking-tighter">Objetivo: Volumen</h2>
+                                <p className="text-nppro-green/60 text-xs font-bold uppercase tracking-[0.2em] mt-2">Superávit calórico • Fuerza</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                <PremadePackCard
+                                    variant="mass"
+                                    type="mass5"
+                                    name="Pack Mass x5"
+                                    description="Aumento de masa y fuerza"
+                                    price={50000}
+                                    onAdd={() => handleAddPremadePack('mass5')}
+                                    totalKcal="~3.400"
+                                    totalProt="~254g"
+                                    items={[
+                                        { name: "NPPRO Rice", kcal: 720, prot: 52 },
+                                        { name: "Carne Estilo Oriental", kcal: 680, prot: 50 },
+                                        { name: "Bondiola Braseada", kcal: 700, prot: 48 },
+                                        { name: "Cerdo con Batata y Repollo", kcal: 670, prot: 48 },
+                                        { name: "Lemon Chicken", kcal: 630, prot: 54 },
+                                    ]}
+                                />
+                                <PremadePackCard
+                                    variant="mass"
+                                    type="mass10"
+                                    name="Pack Mass x10"
+                                    description="Alta densidad semanal"
+                                    price={98000}
+                                    onAdd={() => handleAddPremadePack('mass10')}
+                                    totalKcal="~6.740"
+                                    totalProt="~508g"
+                                    items={[
+                                        { name: "NPPRO Rice", qty: 2, kcal: 1440, prot: 104 },
+                                        { name: "Carne Oriental", qty: 2, kcal: 1360, prot: 100 },
+                                        { name: "Bondiola Braseada", qty: 2, kcal: 1400, prot: 96 },
+                                        { name: "Cerdo con Batata", qty: 2, kcal: 1340, prot: 96 },
+                                        { name: "Mix Lemon & Asada", qty: 2, kcal: 1210, prot: 106 },
+                                    ]}
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="bg-white/5 p-1 rounded-2xl flex border border-white/10 backdrop-blur-md">
-                        {[
-                            { id: 'volumen', icon: Scale, label: 'Volumen' },
-                            { id: 'definicion', icon: Flame, label: 'Definición' }
-                        ].map((t) => (
-                            <button
-                                key={t.id}
-                                onClick={() => setPackType(t.id as any)}
-                                className={`px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 transition-all duration-300 ${packType === t.id ? 'bg-nppro-green text-black shadow-[0_0_20px_rgba(22,163,74,0.3)]' : 'text-white/40 hover:text-white'
-                                    }`}
-                            >
-                                <t.icon size={16} /> {t.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Lista de Productos - Estilo Minimalista */}
-                    <div className="flex-1 space-y-3">
-                        {eligibleProducts.map((product) => {
-                            const qty = cart.find(item => item.key === `${product.id}_std`)?.quantity || 0;
-                            return (
-                                <motion.div
-                                    layout
-                                    key={product.id}
-                                    className={`group flex items-center gap-4 p-3 rounded-3xl transition-all duration-500 border ${qty > 0 ? 'bg-white/[0.03] border-nppro-green/30' : 'bg-transparent border-white/5 hover:border-white/20'
-                                        }`}
-                                >
-                                    <div
-                                        onClick={() => setSelectedProduct(product)}
-                                        className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer rounded-2xl overflow-hidden shadow-2xl"
-                                    >
-                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                        {qty > 0 && (
-                                            <div className="absolute inset-0 bg-nppro-green/20 backdrop-blur-[2px] flex items-center justify-center">
-                                                <span className="text-black bg-nppro-green w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">{qty}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3
-                                                onClick={() => setSelectedProduct(product)}
-                                                className="font-bold text-lg truncate cursor-pointer hover:text-nppro-green transition-colors"
-                                            >
-                                                {product.name}
-                                            </h3>
-                                            <button
-                                                onClick={() => setSelectedProduct(product)}
-                                                className="text-white/30 hover:text-white transition-colors"
-                                            >
-                                                <Info size={14} />
-                                            </button>
-                                        </div>
-
-                                        {/* Macros Quick View */}
-                                        <div className="flex items-center gap-4">
-                                            {/* Price hidden/commented as per general requirement, verify if needed here. 
-                                                User said "Remove/hide the price on the menu cards". 
-                                                Here it is a list. I will keep price small or hide it? 
-                                                The previous code showed price. I will keep it for now as it's a builder 
-                                                but make it consistent. 
-                                                WAIT: "Remove/hide the price on the menu cards". 
-                                                This is a "builder card". I'll keep the price as it's crucial for totals, 
-                                                but I can make it subtle. Actually, the total relies on it. 
-                                                I'll leave it but maybe make it less prominent if requested, 
-                                                but functionality-wise it's needed for the $Subtotal logic.
-                                                However, user said "until costs/pricing are ready". 
-                                                IF costs are not ready, maybe I should hide it here too?
-                                                "Show macros on each card". I will emphasize macros.
-                                             */}
-                                            {/* Re-evaluating: If price is hidden on cards, user implies pricing is not final. 
-                                                But the cart calculates totals. 
-                                                The user asked to hide price on "Menu cards". 
-                                                I will hide unit price here too to be consistent, OR show "Consultar".
-                                                BUT, the cart works with prices. 
-                                                For now I'll keep the price here because the Cart Sidebar SHOWS totals. 
-                                                If I hide it here, totals become magical. 
-                                                User goal: "Replace any broken checkout flow with WhatsApp ordering". 
-                                                WhatsApp order includes "Total items", checking plan... "Valor aprox". 
-                                                So prices ARE used. 
-                                                I will keep the price here but maybe emphasize macros more.
-                                             */}
-                                            {/* <span className="text-nppro-green font-black">${product.price}</span> */}
-                                            {/* I will keep it visible as the logic uses it. */}
-                                            <span className="text-nppro-green font-black">${product.price}</span>
-
-                                            {product.macros && (
-                                                <div className="flex gap-3 text-[10px] text-white/30 uppercase font-bold tracking-tighter">
-                                                    <span>{product.macros.kcal} kcal</span>
-                                                    <span>P: {product.macros.protein}g</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center bg-black/40 rounded-2xl border border-white/5 p-1">
-                                        <button
-                                            onClick={() => handleAdjust(product.id, -1)}
-                                            className="w-10 h-10 flex items-center justify-center rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all"
-                                        >
-                                            <Minus size={18} />
-                                        </button>
-                                        <span className={`w-8 text-center font-black ${qty > 0 ? 'text-nppro-green' : 'text-white/20'}`}>{qty}</span>
-                                        <button
-                                            onClick={() => handleAdjust(product.id, 1)}
-                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-nppro-green text-black hover:scale-105 transition-all shadow-lg"
-                                        >
-                                            <Plus size={18} />
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Checkout Sidebar - Estilo Floating Card */}
-                    <aside className="lg:w-[420px]">
-                        <div className="sticky top-28 bg-[#0D0D0D] border border-white/10 rounded-[40px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
-                            {/* Glow Effect */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-nppro-green/5 blur-[80px] rounded-full pointer-events-none" />
-
-                            <h2 className="text-xl font-black mb-8 italic uppercase flex items-center justify-between">
-                                <span className="flex items-center gap-2">
-                                    <ShoppingCart size={20} className="text-nppro-green" />
-                                    Tu Selección
-                                </span>
-                                {totalPackQuantity > 0 && (
-                                    <span className="text-[10px] bg-white/5 px-3 py-1 rounded-full text-nppro-gray not-italic font-bold tracking-widest">
-                                        {totalPackQuantity} ITEMS
-                                    </span>
-                                )}
+                    {/* Checkout Sidebar - Fijo */}
+                    <aside className="lg:w-[400px]">
+                        <div className="sticky top-28 bg-[#0D0D0D] border border-white/10 rounded-[40px] p-8 shadow-2xl">
+                            <h2 className="text-xl font-black mb-8 italic uppercase flex items-center gap-2">
+                                <ShoppingCart size={20} className="text-nppro-green" /> Tu Selección
                             </h2>
 
                             {selectedPremadePack ? (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 p-6 rounded-3xl bg-nppro-green text-black relative">
-                                    <Sparkles size={40} className="absolute right-4 top-4 opacity-20" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Pack Inteligente</span>
-                                    <h3 className="text-2xl font-black italic uppercase leading-none mt-1">
-                                        {selectedPremadePack === 'starter' ? 'Pro Starter' : 'Pro Elite'}
+                                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mb-8 p-6 rounded-3xl bg-nppro-green text-black relative overflow-hidden shadow-[0_0_30px_rgba(22,163,74,0.2)]">
+                                    <Sparkles size={80} className="absolute -right-6 -top-6 opacity-10" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Pack Listo</span>
+                                    <h3 className="text-3xl font-black italic uppercase leading-none mt-1">
+                                        {packTitles[selectedPremadePack]}
                                     </h3>
-                                    <p className="text-xs font-bold mt-2 flex items-center gap-1">
-                                        <ShieldCheck size={14} /> LISTO PARA ENVIAR
+                                    <p className="text-xs font-bold mt-4 flex items-center gap-1 bg-black/10 w-fit px-3 py-1.5 rounded-full">
+                                        <ShieldCheck size={14} /> LISTO PARA PREPARAR
                                     </p>
                                 </motion.div>
                             ) : (
-                                <div className="mb-10">
-                                    <div className="flex justify-between items-end mb-4">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Progreso del Pack</span>
-                                        {currentDiscountTier && (
-                                            <span className="text-nppro-green font-black text-[10px] px-2 py-1 bg-nppro-green/10 rounded-md animate-pulse">
-                                                {currentDiscountTier.discount * 100}% OFF ACTIVADO
-                                            </span>
-                                        )}
+                                <div className="mb-8 p-8 rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02]">
+                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                                        <ShoppingCart size={24} className="text-white/20" />
                                     </div>
-                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-4">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${progress}%` }}
-                                            className="h-full bg-nppro-green shadow-[0_0_20px_rgba(22,163,74,0.6)]"
-                                        />
-                                    </div>
-                                    {nextTier && (
-                                        <p className="text-[11px] text-white/40 font-medium leading-relaxed italic">
-                                            Agregá <span className="text-white font-bold">{nextTier.min - totalPackQuantity}</span> más para el <span className="text-nppro-green font-bold">{nextTier.discount * 100}% OFF</span>
-                                        </p>
-                                    )}
+                                    <p className="text-xs text-white/40 uppercase font-bold tracking-widest leading-relaxed">
+                                        Seleccioná un pack <br /> para comenzar
+                                    </p>
                                 </div>
                             )}
 
-                            {/* Totales */}
-                            <div className="space-y-3 mb-8">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-white/40 font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
-                                    <span className="font-mono">${subtotal.toLocaleString('es-AR')}</span>
+                            <div className="space-y-4 mb-8">
+                                <div className="flex justify-between text-[10px] font-bold uppercase text-white/40">
+                                    <span>Subtotal</span>
+                                    <span className="font-mono text-white">${subtotal.toLocaleString('es-AR')}</span>
                                 </div>
                                 {packDiscount > 0 && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-nppro-green font-bold uppercase tracking-widest text-[10px]">Descuento Aplicado</span>
-                                        <span className="text-nppro-green font-mono">-${packDiscount.toLocaleString('es-AR')}</span>
+                                    <div className="flex justify-between text-[10px] font-bold uppercase text-nppro-green">
+                                        <span>Descuento</span>
+                                        <span className="font-mono">-${packDiscount.toLocaleString('es-AR')}</span>
                                     </div>
                                 )}
-                                {selectedPremadePack === 'elite' && (
-                                    <div className="flex justify-between text-sm items-center bg-nppro-green/5 p-2 rounded-xl border border-nppro-green/10">
-                                        <span className="text-nppro-green font-bold text-[10px] uppercase flex items-center gap-2"><Truck size={14} /> Envío Bonificado</span>
-                                        <span className="text-nppro-green text-[10px] font-black">FREE</span>
+                                {(selectedPremadePack === 'mass10' || selectedPremadePack === 'lean10') && (
+                                    <div className="flex justify-between text-[10px] items-center bg-nppro-green/5 p-3 rounded-xl border border-nppro-green/20">
+                                        <span className="text-nppro-green font-bold uppercase flex items-center gap-2"><Truck size={14} /> Envío Bonificado</span>
+                                        <span className="text-nppro-green font-black">FREE</span>
                                     </div>
                                 )}
-                                <div className="pt-4 border-t border-white/5 flex justify-between items-end">
-                                    <span className="font-black uppercase italic text-lg">Total</span>
-                                    <div className="text-right">
-                                        <span className="block text-4xl font-black text-white tracking-tighter">
-                                            ${total.toLocaleString('es-AR')}
-                                        </span>
-                                    </div>
+                                <div className="pt-6 border-t border-white/10 flex justify-between items-end">
+                                    <span className="font-black uppercase italic text-lg text-white">Total</span>
+                                    <span className="text-5xl font-black text-white tracking-tighter">
+                                        ${total.toLocaleString('es-AR')}
+                                    </span>
                                 </div>
                             </div>
 
                             <button
                                 onClick={handleWhatsAppOrder}
-                                disabled={totalPackQuantity === 0}
-                                className="btn-primary w-full py-4 text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!selectedPremadePack}
+                                className="w-full bg-nppro-green text-black py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-xl"
                             >
-                                <Send size={18} /> Pedir por WhatsApp
+                                <Send size={18} /> Coordinar Pedido
                             </button>
-
-                            <p className="text-[10px] text-nppro-gray text-center uppercase tracking-widest font-bold">
-                                Sin pago online • Coordinación directa
-                            </p>
                         </div>
-                        <p className="text-[9px] text-center text-white/30 uppercase font-black tracking-[0.2em] mt-4">
-                            Pago seguro al recibir o coordinar
-                        </p>
-            </aside>
+                    </aside>
+                </div>
+            </div>
         </div>
-            </div >
-
-    <AnimatePresence>
-        {selectedProduct && (
-            <ProductDetailModal
-                product={selectedProduct}
-                onClose={() => setSelectedProduct(null)}
-            />
-        )}
-    </AnimatePresence>
-        </div >
     );
 };
 

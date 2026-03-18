@@ -15,15 +15,15 @@ interface CartContextType {
     vacuumTotal: number;
     total: number;
     currentDiscountTier: DiscountTier | null;
-    selectedPremadePack: 'starter' | 'elite' | null;
-    setSelectedPremadePack: (pack: 'starter' | 'elite' | null) => void;
+    selectedPremadePack: string | null;
+    setSelectedPremadePack: (pack: string | null) => void;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 const STORAGE_KEY = 'nppro_cart_v1';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [selectedPremadePack, setSelectedPremadePack] = useState<'starter' | 'elite' | null>(null);
+    const [selectedPremadePack, setSelectedPremadePack] = useState<string | null>(null);
     const [cart, setCart] = useState<CartItem[]>(() => {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -112,10 +112,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let total = subtotal - packDiscount + vacuumTotal;
 
-    if (selectedPremadePack === 'starter') {
-        total = 49000;
-    } else if (selectedPremadePack === 'elite') {
-        total = 95000;
+    if (selectedPremadePack === 'mass5') {
+        total = 49000 + vacuumTotal;
+    } else if (selectedPremadePack === 'mass10') {
+        total = 98000 + vacuumTotal;
+    } else if (selectedPremadePack === 'lean5') {
+        total = 45000 + vacuumTotal;
+    } else if (selectedPremadePack === 'lean10') {
+        total = 90000 + vacuumTotal;
     }
 
     return (

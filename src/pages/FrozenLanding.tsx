@@ -87,7 +87,7 @@ const FrozenLanding: React.FC = () => {
                     >
                         <div className="h-[1px] w-12 bg-cyan-400/40 mx-auto mb-6" />
                         <h2 className="text-sm md:text-2xl font-light tracking-[0.2em] text-cyan-50/70 uppercase px-4">
-                            Algo nuevo está llegando... <br className="md:hidden" />
+                            Algo nuevo se está congelando... <br className="md:hidden" />
                             <span className="font-bold text-white mt-2 inline-block md:ml-2">Muy pronto</span>
                         </h2>
                     </motion.div>

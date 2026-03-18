@@ -212,34 +212,56 @@ export const MENU: Product[] = [
     },
 ];
 
-export const PREMADE_PACKS = {
-    starter: {
-        name: 'Pack Pro Starter',
+export const PREMADE_PACKS: Record<string, any> = {
+    mass5: {
+        name: 'Pack Mass x5',
         mealsCount: 5,
         price: 49000,
         items: [
-            { id: 'm1', qty: 1 },
-            { id: 'm3', qty: 1 },
-            { id: 'm5', qty: 1 },
-            { id: 'm7', qty: 1 },
-            { id: 'm4', qty: 1 }
+            { id: 'm7', qty: 1, customName: 'NPPRO Rice — 720 kcal · 52g prot' },
+            { id: 'm2', qty: 1, customName: 'Carne Estilo Oriental — 680 kcal · 50g prot ⭐' },
+            { id: 'm4', qty: 1, customName: 'Bondiola Braseada — 700 kcal · 48g prot' },
+            { id: 'm8', qty: 1, customName: 'Cerdo con Batata y Repollo — 670 kcal · 48g prot' },
+            { id: 'm3', qty: 1, customName: 'Lemon Chicken — 630 kcal · 54g prot' }
         ]
     },
-    elite: {
-        name: 'Pack Pro Elite',
+    mass10: {
+        name: 'Pack Mass x10',
         mealsCount: 10,
-        price: 95000,
+        price: 98000,
         isMostPopular: true,
-        freeShipping: true,
         items: [
-            { id: 'm1', qty: 1 },
-            { id: 'm2', qty: 1 },
-            { id: 'm5', qty: 1 },
-            { id: 'm4', qty: 2 },
-            { id: 'm3', qty: 1 },
-            { id: 'm7', qty: 2 },
-            { id: 'm8', qty: 1 },
-            { id: 'm10', qty: 1 }
+            { id: 'm7', qty: 2, customName: 'NPPRO Rice — 720 kcal · 52g prot' },
+            { id: 'm2', qty: 2, customName: 'Carne Estilo Oriental — 680 kcal · 50g prot ⭐' },
+            { id: 'm4', qty: 2, customName: 'Bondiola Braseada — 700 kcal · 48g prot' },
+            { id: 'm8', qty: 2, customName: 'Cerdo con Batata y Repollo — 670 kcal · 48g prot' },
+            { id: 'm3', qty: 1, customName: 'Lemon Chicken — 630 kcal · 54g prot' },
+            { id: 'm6', qty: 1, customName: 'Carne Asada con Verduras — 580 kcal · 52g prot' }
+        ]
+    },
+    lean5: {
+        name: 'Pack Lean x5',
+        mealsCount: 5,
+        price: 45000,
+        items: [
+            { id: 'm2', qty: 1, customName: 'Carne Estilo Oriental — 490 kcal · 48g prot ⭐' },
+            { id: 'm6', qty: 1, customName: 'Carne Asada con Verduras — 430 kcal · 50g prot' },
+            { id: 'm7', qty: 1, customName: 'NPPRO Rice — 505 kcal · 50g prot' },
+            { id: 'm3', qty: 1, customName: 'Lemon Chicken — 480 kcal · 52g prot' },
+            { id: 'm8', qty: 1, customName: 'Cerdo con Batata y Repollo — 490 kcal · 46g prot' }
+        ]
+    },
+    lean10: {
+        name: 'Pack Lean x10',
+        mealsCount: 10,
+        price: 90000,
+        items: [
+            { id: 'm2', qty: 2, customName: 'Carne Estilo Oriental — 490 kcal · 48g prot ⭐' },
+            { id: 'm6', qty: 2, customName: 'Carne Asada con Verduras — 430 kcal · 50g prot' },
+            { id: 'm7', qty: 2, customName: 'NPPRO Rice — 505 kcal · 50g prot' },
+            { id: 'm3', qty: 2, customName: 'Lemon Chicken — 480 kcal · 52g prot' },
+            { id: 'm8', qty: 1, customName: 'Cerdo con Batata y Repollo — 490 kcal · 46g prot' },
+            { id: 'm4', qty: 1, customName: 'Bondiola Braseada — 530 kcal · 44g prot' }
         ]
     }
 };
