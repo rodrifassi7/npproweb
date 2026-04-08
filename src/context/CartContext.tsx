@@ -113,13 +113,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let total = subtotal - packDiscount + vacuumTotal;
 
     if (selectedPremadePack === 'mass5') {
-        total = 49000 + vacuumTotal;
+        total = 55000 + vacuumTotal;
     } else if (selectedPremadePack === 'mass10') {
-        total = 98000 + vacuumTotal;
+        total = 105000 + vacuumTotal;
     } else if (selectedPremadePack === 'lean5') {
-        total = 45000 + vacuumTotal;
+        total = 49000 + vacuumTotal;
     } else if (selectedPremadePack === 'lean10') {
-        total = 90000 + vacuumTotal;
+        total = 95000 + vacuumTotal;
     }
 
     return (

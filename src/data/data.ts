@@ -216,7 +216,7 @@ export const PREMADE_PACKS: Record<string, any> = {
     mass5: {
         name: 'Pack Mass x5',
         mealsCount: 5,
-        price: 49000,
+        price: 55000,
         items: [
             { id: 'm7', qty: 1, customName: 'NPPRO Rice — 720 kcal · 52g prot' },
             { id: 'm2', qty: 1, customName: 'Carne Estilo Oriental — 680 kcal · 50g prot ⭐' },
@@ -228,7 +228,7 @@ export const PREMADE_PACKS: Record<string, any> = {
     mass10: {
         name: 'Pack Mass x10',
         mealsCount: 10,
-        price: 98000,
+        price: 105000,
         isMostPopular: true,
         items: [
             { id: 'm7', qty: 2, customName: 'NPPRO Rice — 720 kcal · 52g prot' },
@@ -242,7 +242,7 @@ export const PREMADE_PACKS: Record<string, any> = {
     lean5: {
         name: 'Pack Lean x5',
         mealsCount: 5,
-        price: 45000,
+        price: 49000,
         items: [
             { id: 'm2', qty: 1, customName: 'Carne Estilo Oriental — 490 kcal · 48g prot ⭐' },
             { id: 'm6', qty: 1, customName: 'Carne Asada con Verduras — 430 kcal · 50g prot' },
@@ -254,7 +254,7 @@ export const PREMADE_PACKS: Record<string, any> = {
     lean10: {
         name: 'Pack Lean x10',
         mealsCount: 10,
-        price: 90000,
+        price: 95000,
         items: [
             { id: 'm2', qty: 2, customName: 'Carne Estilo Oriental — 490 kcal · 48g prot ⭐' },
             { id: 'm6', qty: 2, customName: 'Carne Asada con Verduras — 430 kcal · 50g prot' },

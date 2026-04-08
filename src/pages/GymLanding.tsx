@@ -1,10 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Clock, Flame, ChevronRight, Copy, Check, Zap, Trophy } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Clock, Flame, Check, Copy, Zap, ArrowRight, MessageSquare, Award } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CONFIG } from '../data/data';
 
-const GymLanding: React.FC = () => {
-    const [copied, setCopied] = React.useState(false);
+const GymLandingV3WhatsApp: React.FC = () => {
+    const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
         navigator.clipboard.writeText('GYMPOWER10');
@@ -12,176 +12,169 @@ const GymLanding: React.FC = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    // --- CONFIGURACIÓN DE WHATSAPP ---
+    const WHATSAPP_NUMBER = CONFIG.WHATSAPP_NUMBER;
+
+    const WHATSAPP_MESSAGE = "¡Hola NPPRO! Quiero pedir mi Pack con el 10% OFF exclusivo de mi gym.";
+    const encodedMessage = encodeURIComponent(WHATSAPP_MESSAGE);
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    // ---------------------------------
+
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white pb-32 overflow-x-hidden font-sans">
-            {/* 1. HERO - IMPACTO RADICAL */}
-            <section className="relative pt-24 pb-20 px-6">
-                {/* Efecto de luz de fondo (Glow) */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[500px] bg-nppro-green/20 blur-[120px] rounded-full pointer-events-none" />
+        <div className="min-h-screen bg-gray-950 text-gray-100 font-sans selection:bg-green-500 selection:text-black">
 
-                <div className="container mx-auto max-w-4xl text-center relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-nppro-green/10 border border-nppro-green/30 text-[11px] font-black uppercase tracking-[0.2em] text-nppro-green mb-8"
-                    >
-                        <Zap size={12} fill="currentColor" />
-                        Alianza Exclusiva para Gimnasios
-                    </motion.div>
+            {/* 1. HERO - RESPONSIVO & IMPACTANTE */}
+            <header className="relative bg-gray-900 border-b border-gray-800">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1920&auto=format&fit=crop')] opacity-10 bg-cover bg-center" />
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-6xl md:text-8xl font-[900] italic uppercase tracking-tighter leading-[0.85] mb-6"
-                    >
-                        TU CUERPO SE CONSTRUYE <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500">
-                            EN LA COCINA
-                        </span>
-                    </motion.h1>
+                <div className="mx-auto max-w-7xl px-6">
+                    <div className="flex flex-col md:flex-row items-center gap-12 pt-16 md:pt-24 pb-16">
 
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-gray-400 font-medium text-lg md:text-xl max-w-lg mx-auto leading-tight mb-10"
-                    >
-                        Packs de comidas <span className="text-white">Ultra-Proteicos</span> diseñados para socios que no tienen tiempo que perder.
-                    </motion.p>
-                </div>
-            </section>
-
-            {/* 2. EL "TICKET" DE BENEFICIO */}
-            <section className="px-6 -mt-10 mb-20 relative z-20">
-                <div className="container mx-auto max-w-md">
-                    <motion.div
-                        initial={{ rotate: -2, y: 20, opacity: 0 }}
-                        animate={{ rotate: 0, y: 0, opacity: 1 }}
-                        transition={{ type: "spring", damping: 15 }}
-                        className="relative bg-nppro-green p-[2px] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(74,222,128,0.2)]"
-                    >
-                        <div className="bg-black rounded-[22px] p-8 text-center relative overflow-hidden">
-                            {/* Decoración de fondo */}
-                            <div className="absolute top-0 right-0 opacity-10 uppercase font-black text-6xl italic -mr-10 -mt-5 select-none">GYM</div>
-
-                            <h3 className="text-nppro-green font-black text-xs uppercase tracking-[0.3em] mb-2">Beneficio de tu Gym</h3>
-                            <div className="text-6xl font-[1000] italic tracking-tighter text-white mb-6">
-                                10%<span className="text-2xl uppercase">off</span>
-                            </div>
-
-                            <button
-                                onClick={handleCopy}
-                                className="w-full group relative bg-nppro-green hover:bg-white text-black font-black py-5 rounded-2xl transition-all duration-300 active:scale-95 overflow-hidden"
-                            >
-                                <div className="flex items-center justify-center gap-3 relative z-10">
-                                    <span className="text-xl tracking-tighter uppercase">
-                                        {copied ? '¡COPIADO!' : 'GYMPOWER10'}
-                                    </span>
-                                    {copied ? <Check size={22} strokeWidth={3} /> : <Copy size={22} strokeWidth={3} />}
-                                </div>
-                                <div className="absolute inset-0 bg-white translate-y-[101%] group-hover:translate-y-0 transition-transform duration-300" />
-                            </button>
-
-                            <p className="text-[10px] text-gray-500 mt-4 font-bold uppercase tracking-widest">
-                                Aplicable en Packs de 5 y 10 viandas
-                            </p>
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* 3. PROPUESTA DE VALOR - RÁPIDA Y AGRESIVA */}
-            <section className="px-6 mb-24">
-                <div className="container mx-auto max-w-md">
-                    <div className="grid gap-3">
-                        {[
-                            { icon: <Flame />, title: "MAX PROTEIN", text: "Macros optimizados para hipertrofia." },
-                            { icon: <Clock />, title: "ZERO COOKING", text: "Recuperá 10 horas de tu semana." },
-                            { icon: <Trophy />, title: "REAL FOOD", text: "Sin químicos. Solo combustible real." }
-                        ].map((item, i) => (
+                        <div className="md:w-1/2 text-center md:text-left relative z-10">
                             <motion.div
-                                key={i}
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.1 }}
-                                className="group flex items-center gap-5 p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-nppro-green/30 transition-all"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="inline-flex items-center gap-2 px-3 py-1 border border-green-500/30 rounded-full text-[10px] font-bold uppercase tracking-widest bg-green-950/50 text-green-300 mb-8"
                             >
-                                <div className="w-14 h-14 rounded-full bg-black border border-white/10 flex items-center justify-center text-nppro-green group-hover:scale-110 transition-transform shadow-xl">
-                                    {item.icon}
-                                </div>
-                                <div>
-                                    <div className="font-[900] text-xl italic uppercase leading-none mb-1">{item.title}</div>
-                                    <div className="text-sm text-gray-500 font-medium uppercase tracking-tighter">{item.text}</div>
-                                </div>
+                                <Award size={12} className="text-green-400" /> Alianza Premium Gym
                             </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
-            {/* 4. SELECCIÓN DE PACKS - "CARDS DE ÉLITE" */}
-            <section className="px-6 mb-12">
-                <div className="container mx-auto max-w-md text-center">
-                    <h2 className="text-3xl font-[1000] italic uppercase tracking-tighter mb-8 italic">Seleccioná tu Blindaje</h2>
+                            <motion.h1
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="text-5xl md:text-7xl font-[1000] text-white leading-[0.9] tracking-tighter uppercase italic mb-6"
+                            >
+                                TU ENTRENAMIENTO <br /> <span className="text-white/40">TERMINA EN EL PLATO</span>
+                            </motion.h1>
+                            <p className="text-gray-400 text-lg md:text-xl max-w-xs md:max-w-none mx-auto md:mx-0">Nutrición ultra-proteica diseñada para los mas exigentes     </p>
+                        </div>
 
-                    <div className="grid gap-6">
-                        {/* Pack 10 - EL DOMINANTE */}
                         <motion.div
-                            whileHover={{ y: -5 }}
-                            className="relative p-[1px] rounded-[35px] bg-gradient-to-b from-nppro-green to-transparent"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="md:w-1/2 relative z-10"
                         >
-                            <div className="bg-[#111] rounded-[34px] p-8">
-                                <span className="bg-nppro-green text-black text-[10px] font-[1000] uppercase px-4 py-1.5 rounded-full mb-4 inline-block">
-                                    EL MÁS ELEGIDO POR ATLETAS
-                                </span>
-                                <div className="text-5xl font-[1000] italic tracking-tighter mb-1">PACK 10</div>
-                                <div className="text-nppro-green font-bold uppercase text-xs tracking-widest mb-8 text-center italic">Dominá tu nutrición semanal</div>
-
-                                <ul className="space-y-4 mb-8 text-left border-y border-white/5 py-6">
-                                    <li className="flex items-center gap-3 font-bold text-sm uppercase italic">
-                                        <Check className="text-nppro-green" size={20} strokeWidth={3} /> Almuerzo y Cena Lunes a Viernes
-                                    </li>
-                                    <li className="flex items-center gap-3 font-bold text-sm uppercase italic">
-                                        <Check className="text-nppro-green" size={20} strokeWidth={3} /> Menú Variable (No te cansás)
-                                    </li>
-                                    <li className="flex items-center gap-3 font-bold text-sm uppercase italic text-nppro-green">
-                                        <Check className="text-nppro-green" size={20} strokeWidth={3} /> Envío Prioritario y Gratuito al Gym
-                                    </li>
-                                </ul>
-
-                                <Link to="/packs" className="block w-full bg-white text-black font-[1000] uppercase py-5 rounded-2xl hover:bg-nppro-green transition-colors text-xl tracking-tighter">
-                                    ADQUIRIR PACK 10
-                                </Link>
+                            <div className="w-full h-56 md:h-96 bg-gray-800 rounded-3xl flex items-center justify-center border-4 md:border-8 border-gray-900 shadow-inner overflow-hidden">
+                                <img
+                                    src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop"
+                                    alt="Vianda NPPRO premium"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                         </motion.div>
+                    </div>
+                </div>
+            </header>
 
-                        {/* Pack 5 - EL INICIADOR */}
-                        <Link to="/packs" className="group p-8 rounded-[35px] border-2 border-white/10 hover:border-white/30 transition-all">
-                            <div className="text-2xl font-[900] italic text-gray-400 group-hover:text-white transition-colors">PACK 5 - PRUEBA</div>
-                            <div className="text-xs text-gray-600 font-bold uppercase mt-1 tracking-widest">Para probar el poder</div>
-                        </Link>
+            {/* 2. PRODUCTOS - Grid Responsivo */}
+            <section className="px-6 -mt-12 md:-mt-20 mb-16 relative z-20">
+                <div className="mx-auto max-w-7xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                        <motion.div
+                            whileHover={{ y: -8 }}
+                            className="bg-gray-900 border-2 border-green-500 p-8 rounded-[32px] shadow-[0_20px_40px_rgba(34,197,94,0.15)] group transition-all"
+                        >
+                            <div className="flex items-center justify-between gap-4 mb-6">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-4xl font-black italic uppercase tracking-tighter text-white">Pack 10</span>
+                                        <span className="bg-green-400 text-black text-[10px] font-black px-2.5 py-1 rounded-full border border-green-400/20">MÁS POPULAR</span>
+                                    </div>
+                                    <p className="text-gray-400 text-base font-medium">Dominá tu nutrición semanal (Lun-Vie)</p>
+                                </div>
+                                <div className="bg-green-500/10 p-5 rounded-2xl border border-green-500/20 text-green-400 group-hover:bg-green-400 group-hover:text-black transition-all">
+                                    <Zap size={28} />
+                                </div>
+                            </div>
+                            <ul className="space-y-2 text-base text-gray-300 border-t border-gray-800 pt-6 mb-6">
+                                <li className="flex items-center gap-3"><Check size={18} className="text-green-400" /> Almuerzo y Cena incluidos.</li>
+                                <li className="flex items-center gap-3"><Check size={18} className="text-green-400" /> Menú variable semanal.</li>
+                                <li className="flex items-center gap-3 text-green-300 font-semibold"><Check size={18} /> Envío GRATIS al Gym.</li>
+                            </ul>
+                            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-green-400 text-black h-14 rounded-xl font-bold uppercase tracking-tight flex items-center justify-center gap-2 hover:bg-white transition-colors">
+                                Ver Menú Pack 10 <ArrowRight size={20} />
+                            </a>
+                        </motion.div>
+
+                        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="bg-gray-900 border border-gray-800 p-8 rounded-[32px] flex items-center justify-between group hover:border-gray-700 transition-colors">
+                            <div>
+                                <span className="text-3xl font-black italic uppercase tracking-tighter text-white">Pack 5 - Prueba</span>
+                                <p className="text-gray-400 text-sm font-medium uppercase tracking-tight">Ideal para probar el poder</p>
+                            </div>
+                            <div className="bg-gray-800 p-5 rounded-2xl group-hover:bg-white group-hover:text-black transition-all text-gray-400">
+                                <ArrowRight size={22} />
+                            </div>
+                        </a>
                     </div>
                 </div>
             </section>
 
-            {/* 5. CTA FIJO - "FLOTANTE AGRESIVO" */}
-            <div className="fixed bottom-6 left-0 w-full px-6 z-[100]">
-                <motion.div
-                    initial={{ y: 100 }}
-                    animate={{ y: 0 }}
-                    className="container mx-auto max-w-md bg-white text-black p-3 rounded-[24px] flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-                >
-                    <div className="pl-4">
-                        <div className="text-[10px] font-black uppercase opacity-50 leading-none">Tu Nutrición</div>
-                        <div className="text-lg font-[1000] italic uppercase leading-none">Lista ahora</div>
+            {/* 3. EL BENEFICIO - Bento Style */}
+            <section className="px-6 mb-16">
+                <div className="mx-auto max-w-7xl">
+                    <div className="bg-gray-900 border-2 border-gray-800 rounded-[32px] p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
+
+                        <div className="text-center md:text-left">
+                            <p className="text-sm font-black uppercase tracking-widest mb-1 text-gray-500">Cupón Exclusivo Socios</p>
+                            <h2 className="text-8xl font-black italic leading-none mb-2 tracking-tighter text-white">10% OFF</h2>
+                            <p className="text-gray-400 max-w-xs text-sm">Mostrá este código al pedir por WhatsApp para Packs de 5 y 10 viandas.</p>
+                        </div>
+
+                        <div className="w-full md:w-auto">
+                            <button
+                                onClick={handleCopy}
+                                className="flex items-center justify-between w-full md:w-80 bg-gray-800 text-green-300 p-4 rounded-2xl font-bold uppercase tracking-tight active:scale-95 transition-transform"
+                            >
+                                <span className="pl-3">{copied ? '¡LISTO PARA USAR!' : 'COPIAR CÓDIGO'}</span>
+                                <div className="bg-green-400 p-3 rounded-xl text-black">
+                                    <AnimatePresence mode="wait">
+                                        {copied ? (
+                                            <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Check size={22} strokeWidth={3} /></motion.div>
+                                        ) : (
+                                            <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Copy size={22} strokeWidth={3} /></motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </button>
+                        </div>
                     </div>
-                    <Link to="/packs" className="bg-black text-white px-8 py-4 rounded-xl font-[1000] uppercase italic flex items-center gap-2 hover:bg-nppro-green hover:text-black transition-all">
-                        IR A TIENDA <ChevronRight size={20} strokeWidth={3} />
-                    </Link>
-                </motion.div>
+                </div>
+            </section>
+
+            {/* 4. TRUST ELEMENTS - Compactos */}
+            <footer className="bg-gray-950 border-t border-gray-800 px-6 py-10 mb-20 text-center">
+                <div className="flex justify-center gap-12 opacity-40 mb-8 text-gray-400">
+                    {[{ icon: <Flame />, text: "PRO" }, { icon: <Clock />, text: "5 MIN" }, { icon: <Award />, text: "NATURAL" }].map((item, i) => (
+                        <div key={i} className="flex flex-col items-center gap-2">
+                            {item.icon}
+                            <span className="text-[10px] font-black uppercase tracking-widest">{item.text}</span>
+                        </div>
+                    ))}
+                </div>
+                <p className="text-gray-700 text-xs">NPPRO S.A. | Alianza con [Nombre del Gym]</p>
+            </footer>
+
+            {/* 5. BOTTOM BAR - Sticky CTA ACTIVO WHATSAPP */}
+            <div className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent pt-12 z-50">
+                <motion.a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02, backgroundColor: '#ffffff', color: '#000000' }}
+                    whileTap={{ scale: 0.98 }}
+                    // Se agregaron clases para asegurar que se comporte como un flex item
+                    className="w-full max-w-lg mx-auto bg-green-400 text-black h-16 rounded-2xl flex items-center justify-center gap-3 font-black uppercase italic tracking-tighter shadow-[0_25px_50px_rgba(0,0,0,0.5)] no-underline"
+                >
+                    {/* Se cambió ShoppingCart por MessageSquare */}
+                    <MessageSquare size={22} />
+                    Pedir mi Pack por WhatsApp
+                </motion.a>
             </div>
         </div>
     );
 };
 
-export default GymLanding;
+export default GymLandingV3WhatsApp;

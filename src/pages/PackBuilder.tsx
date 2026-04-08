@@ -130,7 +130,7 @@ const PackBuilder: React.FC = () => {
                                     type="lean5"
                                     name="Pack Lean x5"
                                     description="Corte y definición"
-                                    price={45000}
+                                    price={49000}
                                     onAdd={() => handleAddPremadePack('lean5')}
                                     totalKcal="~2.395"
                                     totalProt="~246g"
@@ -147,7 +147,7 @@ const PackBuilder: React.FC = () => {
                                     type="lean10"
                                     name="Pack Lean x10"
                                     description="Plan semanal extremo"
-                                    price={90000}
+                                    price={95000}
                                     onAdd={() => handleAddPremadePack('lean10')}
                                     totalKcal="~4.830"
                                     totalProt="~480g"
@@ -182,7 +182,7 @@ const PackBuilder: React.FC = () => {
                                     type="mass5"
                                     name="Pack Mass x5"
                                     description="Aumento de masa y fuerza"
-                                    price={50000}
+                                    price={55000}
                                     onAdd={() => handleAddPremadePack('mass5')}
                                     totalKcal="~3.400"
                                     totalProt="~254g"
@@ -199,7 +199,7 @@ const PackBuilder: React.FC = () => {
                                     type="mass10"
                                     name="Pack Mass x10"
                                     description="Alta densidad semanal"
-                                    price={98000}
+                                    price={105000}
                                     onAdd={() => handleAddPremadePack('mass10')}
                                     totalKcal="~6.740"
                                     totalProt="~508g"
