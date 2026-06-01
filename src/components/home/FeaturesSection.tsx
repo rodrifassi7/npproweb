@@ -45,6 +45,7 @@ const FeaturesSection: React.FC = () => {
                             <div className="w-12 h-[2px] bg-nppro-green"></div>
                             <span className="text-nppro-green font-bold uppercase tracking-[0.4em] text-xs">Metodología</span>
                         </div>
+
                         <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-[0.85] mb-8">
                             EL SISTEMA <br />
                             <span className="text-white/20">NPPRO.</span>

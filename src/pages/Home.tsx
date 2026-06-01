@@ -8,7 +8,7 @@ import VacuumSection from '../components/home/VacuumSection';
 import FeaturesSection from '../components/home/FeaturesSection';
 import TrustSection from '../components/home/TrustSection';
 import FAQSection from '../components/home/FAQSection';
-import MacrosCalculator from '../components/MacrosCalculator/MacrosCalculator';
+// import MacrosCalculator from '../components/MacrosCalculator/MacrosCalculator';
 import EntryDiscountModal from '../components/common/EntryDiscountModal';
 
 // Data & Utils
@@ -61,7 +61,7 @@ const Home: React.FC = () => {
             <DailySpecialSection dailySpecial={dailySpecial} />
             <VacuumSection />
             <FeaturesSection />
-            <MacrosCalculator />
+            {/* <MacrosCalculator /> */}
             <TrustSection />
             <FAQSection />
         </div>
