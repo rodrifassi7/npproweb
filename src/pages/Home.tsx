@@ -12,7 +12,7 @@ import FAQSection from '../components/home/FAQSection';
 import EntryDiscountModal from '../components/common/EntryDiscountModal';
 
 // Data & Utils
-import { getTodaySpecialByTime } from '../data/weeklyMenu';
+import { getTodayMenu } from '../data/weeklyMenu';
 
 // SEO Schema Data
 const JSON_LD = {
@@ -32,7 +32,7 @@ const JSON_LD = {
 };
 
 const Home: React.FC = () => {
-    const dailySpecial = getTodaySpecialByTime();
+    const dailySpecials = getTodayMenu();
 
     return (
         <div className="flex flex-col bg-[#0B0B0B] text-white overflow-hidden">
@@ -58,7 +58,7 @@ const Home: React.FC = () => {
 
             {/* Main Content Sections */}
             <EntryDiscountModal />
-            <DailySpecialSection dailySpecial={dailySpecial} />
+            <DailySpecialSection dailySpecials={dailySpecials} />
             <VacuumSection />
             <FeaturesSection />
             {/* <MacrosCalculator /> */}

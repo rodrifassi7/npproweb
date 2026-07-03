@@ -4,7 +4,7 @@ import bondiolaConPureImg from '../assets/bondiolaconpure.webp';
 import carneAsadaImg from '../assets/carneasada.webp';
 import carneOrientalImg from '../assets/carneoriental.png';
 import cerdoConColImg from '../assets/cerdoconcol.webp';
-import langostinosImg from '../assets/langostinos.webp';
+import pronuggets from '../assets/pronuggets.png';
 import lemonChickenImg from '../assets/lemonchicken.webp';
 import npProRiceImg from '../assets/npprorice.webp';
 import pechugaRellenaImg from '../assets/pechugarellena.webp';
@@ -198,15 +198,15 @@ export const MENU: Product[] = [
     },
     {
         id: 'm10',
-        name: 'Langostinos al limón y ajo con arroz yamani',
+        name: 'PRO Nuggets con dip',
         category: 'vianda',
         description: '',
         price: 10800,
-        image: langostinosImg,
+        image: pronuggets,
         isDailySpecial: isSpecialToday('m10'),
         packEligible: true,
         vacuumAvailable: true,
-        macros: { kcal: 550, protein: 45, carbs: 60, fat: 13 },
+        macros: { kcal: 480, protein: 56, carbs: 23, fat: 13 },
         ingredients: [],
         tags: ['Cena'],
     },
