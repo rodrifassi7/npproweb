@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { MENU, CONFIG, PREMADE_PACKS } from '../data/data';
-import { ShoppingCart, ShieldCheck, Flame, Send, Sparkles, Truck, Zap } from 'lucide-react';
+import { ShoppingCart, ShieldCheck, Flame, Send, Sparkles, Truck, Zap, Snowflake, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import PremadePackCard from '../components/menu/PremadePackCard';
 import { createWhatsAppLink } from '../utils/whatsapp';
@@ -12,11 +12,14 @@ const PackBuilder: React.FC = () => {
         addToCart,
         clearCart,
         subtotal,
-        packDiscount,
+        shippingCost,
         total,
         selectedPremadePack,
         setSelectedPremadePack
     } = useCart();
+
+    // Precio base del pack seleccionado (desde PREMADE_PACKS, no de los ítems del carrito)
+    const packPrice = selectedPremadePack ? (PREMADE_PACKS[selectedPremadePack]?.price ?? 0) : null;
 
     const packItems = cart.filter((item: any) => item.packEligible);
 
@@ -37,23 +40,27 @@ const PackBuilder: React.FC = () => {
     };
 
     const handleWhatsAppOrder = () => {
-        const items = packItems.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            vacuum: item.useVacuum
-        }));
+        if (!selectedPremadePack) return;
 
-        const PHONE = CONFIG.WHATSAPP_NUMBER;
-        const objective = selectedPremadePack?.includes('mass') ? 'volumen' : 'definicion';
-        const link = createWhatsAppLink(PHONE, objective, items, total, packDiscount > 0 ? (packDiscount / subtotal) : 0);
+        const packName = packTitles[selectedPremadePack];
+        const platosStr = packItems.map(item => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ''}`).join(', ');
+        
+        const envioStr = shippingCost === 0 ? ' (envío gratis)' : ` (+ envío $${shippingCost.toLocaleString('es-AR')})`;
+        
+        const message = `Hola! Quiero el ${packName}.\nPlatos: ${platosStr}\nTotal: $${total.toLocaleString('es-AR')}${envioStr}\nEntrega: lunes / jueves`;
 
-        window.open(link, '_blank');
+        const link = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+        const newWindow = window.open(link, '_blank');
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            window.location.href = link;
+        }
     };
 
     const scrollToSection = (id: string) => {
         const element = document.getElementById(id);
         if (element) {
-            const offset = 100; // Espacio para el navbar fijo si tienes uno
+            const offset = 100;
             const bodyRect = document.body.getBoundingClientRect().top;
             const elementRect = element.getBoundingClientRect().top;
             const elementPosition = elementRect - bodyRect;
@@ -67,10 +74,10 @@ const PackBuilder: React.FC = () => {
     };
 
     const packTitles: Record<string, string> = {
-        'mass5': 'Pack Mass x5',
-        'mass10': 'Pack Mass x10',
-        'lean5': 'Pack Lean x5',
-        'lean10': 'Pack Lean x10'
+        'mass5': 'Pack Congelado x5',
+        'mass10': 'Pack Congelado x10',
+        'lean5': 'Pack Congelado x5',
+        'lean10': 'Pack Congelado x10',
     };
 
     return (
@@ -85,12 +92,34 @@ const PackBuilder: React.FC = () => {
                                 <span className="h-px w-8 bg-nppro-green"></span>
                                 <span className="text-xs font-black uppercase tracking-[0.3em]">Performance Meal Prep</span>
                             </div>
-                            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
-                                Elegí tu <span className="text-nppro-green">Pack</span>
-                            </h1>
+                            <div className="flex items-end gap-4 flex-wrap">
+                                <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
+                                    Elegí tu <span className="text-nppro-green">Pack</span>
+                                </h1>
+                                <span className="mb-1 flex items-center gap-1.5 bg-white/10 border border-white/15 text-white text-[11px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-sm">
+                                    <Snowflake size={12} className="text-cyan-300" />
+                                    Congelados
+                                </span>
+                            </div>
+
+                            {/* Franja informativa */}
+                            <div className="mt-5 flex flex-wrap gap-3">
+                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                                    <Snowflake size={13} className="text-cyan-300 shrink-0" />
+                                    <span className="text-[11px] font-bold text-white/70">Cocinado y congelado en el día</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                                    <Truck size={13} className="text-nppro-green shrink-0" />
+                                    <span className="text-[11px] font-bold text-white/70">Entregas lunes y jueves</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                                    <Clock size={13} className="text-white/50 shrink-0" />
+                                    <span className="text-[11px] font-bold text-white/70">Pedidos hasta viernes 14 hs (entrega lunes) · martes 14 hs (entrega jueves)</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Quick Nav para evitar la "Falsa Base" */}
+                        {/* Quick Nav */}
                         <div className="flex gap-3 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
                             <button
                                 onClick={() => scrollToSection('lean-section')}
@@ -110,12 +139,11 @@ const PackBuilder: React.FC = () => {
 
                 <div className="flex flex-col lg:flex-row gap-12">
 
-                    {/* SECCIÓN DE PACKS PREDEFINIDOS */}
+                    {/* SECCIÓN DE PACKS */}
                     <div className="flex-1 space-y-20">
 
                         {/* Fila Lean */}
                         <div id="lean-section" className="scroll-mt-24">
-                            {/* Títulos Centrados */}
                             <div className="flex flex-col items-center justify-center text-center mb-10">
                                 <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white mb-4 shadow-lg">
                                     <Flame size={32} />
@@ -128,35 +156,39 @@ const PackBuilder: React.FC = () => {
                                 <PremadePackCard
                                     variant="lean"
                                     type="lean5"
-                                    name="Pack Lean x5"
-                                    description="Corte y definición"
-                                    price={54000}
+                                    name="Pack Congelado x5"
+                                    description="Definición semanal"
+                                    price={52500}
+                                    pricePerUnit={10500}
                                     onAdd={() => handleAddPremadePack('lean5')}
-                                    totalKcal="~2.395"
-                                    totalProt="~246g"
                                     items={[
-                                        { name: "Carne Estilo Oriental", kcal: 490, prot: 48 },
-                                        { name: "Carne Asada con Verduras", kcal: 430, prot: 50 },
-                                        { name: "NPPRO Rice", kcal: 505, prot: 50 },
-                                        { name: "Lemon Chicken", kcal: 480, prot: 52 },
-                                        { name: "Cerdo con Batata y Repollo", kcal: 490, prot: 46 },
+                                        { name: "Pollo a la Naranja" },
+                                        { name: "Pollo con Salsa de Maní" },
+                                        { name: "Carne Oriental" },
+                                        { name: "Carne Desmenuzada Tex-Mex" },
+                                        { name: "Bondiola desmechada con puré de boniato" },
                                     ]}
                                 />
                                 <PremadePackCard
                                     variant="lean"
                                     type="lean10"
-                                    name="Pack Lean x10"
-                                    description="Plan semanal extremo"
-                                    price={104000}
+                                    name="Pack Congelado x10"
+                                    description="Plan semanal completo"
+                                    price={100000}
+                                    pricePerUnit={10000}
                                     onAdd={() => handleAddPremadePack('lean10')}
-                                    totalKcal="~4.830"
-                                    totalProt="~480g"
+                                    isBestValue={true}
+                                    savings="$13.000"
+                                    freeShipping={true}
                                     items={[
-                                        { name: "Carne Oriental", qty: 2, kcal: 980, prot: 96 },
-                                        { name: "Carne Asada", qty: 2, kcal: 860, prot: 100 },
-                                        { name: "NPPRO Rice", qty: 2, kcal: 1010, prot: 100 },
-                                        { name: "Lemon Chicken", qty: 2, kcal: 960, prot: 104 },
-                                        { name: "Mix Cerdo & Bondiola", qty: 2, kcal: 1020, prot: 90 },
+                                        { name: "Pollo a la Naranja", qty: 2 },
+                                        { name: "Pollo con Salsa de Maní", qty: 2 },
+                                        { name: "Carne Oriental" },
+                                        { name: "Carne Desmenuzada Tex-Mex" },
+                                        { name: "Bondiola desmechada con puré de boniato" },
+                                        { name: "Cerdo Deshilado con Arroz y Glaseados" },
+                                        { name: "Bondiola al Pomelo" },
+                                        { name: "NPPRO Rice" },
                                     ]}
                                 />
                             </div>
@@ -167,7 +199,6 @@ const PackBuilder: React.FC = () => {
 
                         {/* Fila Mass */}
                         <div id="mass-section" className="scroll-mt-24">
-                            {/* Títulos Centrados */}
                             <div className="flex flex-col items-center justify-center text-center mb-10">
                                 <div className="w-16 h-16 rounded-full bg-nppro-green/10 border border-nppro-green/20 flex items-center justify-center text-nppro-green mb-4 shadow-[0_0_30px_rgba(22,163,74,0.2)]">
                                     <Zap size={32} />
@@ -180,42 +211,46 @@ const PackBuilder: React.FC = () => {
                                 <PremadePackCard
                                     variant="mass"
                                     type="mass5"
-                                    name="Pack Mass x5"
-                                    description="Aumento de masa y fuerza"
-                                    price={60500}
+                                    name="Pack Congelado x5"
+                                    description="Volumen semanal"
+                                    price={52500}
+                                    pricePerUnit={10500}
                                     onAdd={() => handleAddPremadePack('mass5')}
-                                    totalKcal="~3.400"
-                                    totalProt="~254g"
                                     items={[
-                                        { name: "NPPRO Rice", kcal: 720, prot: 52 },
-                                        { name: "Carne Estilo Oriental", kcal: 680, prot: 50 },
-                                        { name: "Bondiola Braseada", kcal: 700, prot: 48 },
-                                        { name: "Cerdo con Batata y Repollo", kcal: 670, prot: 48 },
-                                        { name: "Lemon Chicken", kcal: 630, prot: 54 },
+                                        { name: "Pollo a la Naranja" },
+                                        { name: "Pollo con Salsa de Maní" },
+                                        { name: "Carne Oriental" },
+                                        { name: "Carne Desmenuzada Tex-Mex" },
+                                        { name: "Bondiola desmechada con puré de boniato" },
                                     ]}
                                 />
                                 <PremadePackCard
                                     variant="mass"
                                     type="mass10"
-                                    name="Pack Mass x10"
+                                    name="Pack Congelado x10"
                                     description="Alta densidad semanal"
-                                    price={115500}
+                                    price={100000}
+                                    pricePerUnit={10000}
                                     onAdd={() => handleAddPremadePack('mass10')}
-                                    totalKcal="~6.740"
-                                    totalProt="~508g"
+                                    isBestValue={true}
+                                    savings="$13.000"
+                                    freeShipping={true}
                                     items={[
-                                        { name: "NPPRO Rice", qty: 2, kcal: 1440, prot: 104 },
-                                        { name: "Carne Oriental", qty: 2, kcal: 1360, prot: 100 },
-                                        { name: "Bondiola Braseada", qty: 2, kcal: 1400, prot: 96 },
-                                        { name: "Cerdo con Batata", qty: 2, kcal: 1340, prot: 96 },
-                                        { name: "Mix Lemon & Asada", qty: 2, kcal: 1210, prot: 106 },
+                                        { name: "Pollo a la Naranja", qty: 2 },
+                                        { name: "Pollo con Salsa de Maní", qty: 2 },
+                                        { name: "Carne Oriental" },
+                                        { name: "Carne Desmenuzada Tex-Mex" },
+                                        { name: "Bondiola desmechada con puré de boniato" },
+                                        { name: "Cerdo Deshilado con Arroz y Glaseados" },
+                                        { name: "Bondiola al Pomelo" },
+                                        { name: "NPPRO Rice" },
                                     ]}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Checkout Sidebar - Fijo */}
+                    {/* Checkout Sidebar */}
                     <aside className="lg:w-[400px]">
                         <div className="sticky top-28 bg-[#0D0D0D] border border-white/10 rounded-[40px] p-8 shadow-2xl">
                             <h2 className="text-xl font-black mb-8 italic uppercase flex items-center gap-2">
@@ -230,7 +265,7 @@ const PackBuilder: React.FC = () => {
                                         {packTitles[selectedPremadePack]}
                                     </h3>
                                     <p className="text-xs font-bold mt-4 flex items-center gap-1 bg-black/10 w-fit px-3 py-1.5 rounded-full">
-                                        <ShieldCheck size={14} /> LISTO PARA PREPARAR
+                                        <ShieldCheck size={14} /> PACK CONGELADO
                                     </p>
                                 </motion.div>
                             ) : (
@@ -245,20 +280,32 @@ const PackBuilder: React.FC = () => {
                             )}
 
                             <div className="space-y-4 mb-8">
-                                <div className="flex justify-between text-[10px] font-bold uppercase text-white/40">
-                                    <span>Subtotal</span>
-                                    <span className="font-mono text-white">${subtotal.toLocaleString('es-AR')}</span>
-                                </div>
-                                {packDiscount > 0 && (
-                                    <div className="flex justify-between text-[10px] font-bold uppercase text-nppro-green">
-                                        <span>Descuento</span>
-                                        <span className="font-mono">-${packDiscount.toLocaleString('es-AR')}</span>
-                                    </div>
-                                )}
-                                {(selectedPremadePack === 'mass10' || selectedPremadePack === 'lean10') && (
-                                    <div className="flex justify-between text-[10px] items-center bg-nppro-green/5 p-3 rounded-xl border border-nppro-green/20">
-                                        <span className="text-nppro-green font-bold uppercase flex items-center gap-2"><Truck size={14} /> Envío Bonificado</span>
-                                        <span className="text-nppro-green font-black">FREE</span>
+                                {selectedPremadePack && packPrice !== null ? (
+                                    // ── Modo pack: muestra precio fijo del pack + envío
+                                    <>
+                                        <div className="flex justify-between text-[10px] font-bold uppercase text-white/40">
+                                            <span>Precio pack</span>
+                                            <span className="font-mono text-white">${packPrice.toLocaleString('es-AR')}</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] items-center">
+                                            {shippingCost === 0 ? (
+                                                <>
+                                                    <span className="text-nppro-green font-bold uppercase flex items-center gap-2"><Truck size={14} /> Envío</span>
+                                                    <span className="text-nppro-green font-black bg-nppro-green/10 border border-nppro-green/20 px-3 py-1 rounded-xl">GRATIS</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="text-white/40 font-bold uppercase flex items-center gap-2"><Truck size={14} /> Envío</span>
+                                                    <span className="font-mono text-white">${shippingCost.toLocaleString('es-AR')}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    // ── Modo suelto: muestra subtotal
+                                    <div className="flex justify-between text-[10px] font-bold uppercase text-white/40">
+                                        <span>Subtotal</span>
+                                        <span className="font-mono text-white">${subtotal.toLocaleString('es-AR')}</span>
                                     </div>
                                 )}
                                 <div className="pt-6 border-t border-white/10 flex justify-between items-end">

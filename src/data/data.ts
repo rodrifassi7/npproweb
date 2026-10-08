@@ -13,8 +13,8 @@ export const CONFIG: AppConfig = {
     WHATSAPP_NUMBER: '5492804385269',
     DELIVERY_DAYS: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
     PICKUP_ADDRESS: 'Paraguay 55, Trelew, Chubut',
-    VACUUM_PRICE_PER_ITEM: 250,
-    vacuumExtraPrice: 250,
+    VACUUM_PRICE_PER_ITEM: 500,
+    vacuumExtraPrice: 500,
     DISCOUNT_TIERS: [
 
         { min: 10, max: 999, discount: 0.05 },
@@ -296,55 +296,62 @@ export const MENU: Product[] = [
 ];
 
 export const PREMADE_PACKS: Record<string, any> = {
-    mass5: {
-        name: 'Pack Mass x5',
+    // x5 — misma composición para Lean y Mass
+    lean5: {
+        name: 'Pack Congelado x5',
         mealsCount: 5,
-        price: 60500,
+        price: 52500,
         items: [
-            { id: 'm1', qty: 1, customName: 'NPPRO Rice — 667 kcal · 58g prot' },
-            { id: 'm2', qty: 1, customName: 'Carne Oriental — 710 kcal · 45g prot ⭐' },
-            { id: 'm4', qty: 1, customName: 'Bondiola Desmechada — 704 kcal · 39g prot' },
-            { id: 'm6', qty: 1, customName: 'Cerdo con Batata — 570 kcal · 46g prot' },
-            { id: 'm3', qty: 1, customName: 'Lemon Chicken — 680 kcal · 60g prot' }
+            { id: 'm8',  qty: 1, customName: 'Pollo a la Naranja' },
+            { id: 'm15', qty: 1, customName: 'Pollo con Salsa de Maní' },
+            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
+            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
+            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
+        ]
+    },
+    mass5: {
+        name: 'Pack Congelado x5',
+        mealsCount: 5,
+        price: 52500,
+        items: [
+            { id: 'm8',  qty: 1, customName: 'Pollo a la Naranja' },
+            { id: 'm15', qty: 1, customName: 'Pollo con Salsa de Maní' },
+            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
+            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
+            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
+        ]
+    },
+    // x10 — misma composición para Lean y Mass
+    lean10: {
+        name: 'Pack Congelado x10',
+        mealsCount: 10,
+        isMostPopular: true,
+        price: 100000,
+        items: [
+            { id: 'm8',  qty: 2, customName: 'Pollo a la Naranja' },
+            { id: 'm15', qty: 2, customName: 'Pollo con Salsa de Maní' },
+            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
+            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
+            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
+            { id: 'm11', qty: 1, customName: 'Cerdo Deshilado con Arroz y Glaseados' },
+            { id: 'm9',  qty: 1, customName: 'Bondiola al Pomelo' },
+            { id: 'm1',  qty: 1, customName: 'NPPRO Rice' },
         ]
     },
     mass10: {
-        name: 'Pack Mass x10',
+        name: 'Pack Congelado x10',
         mealsCount: 10,
-        price: 115500,
         isMostPopular: true,
+        price: 100000,
         items: [
-            { id: 'm1', qty: 2, customName: 'NPPRO Rice — 667 kcal · 58g prot' },
-            { id: 'm2', qty: 2, customName: 'Carne Oriental — 710 kcal · 45g prot ⭐' },
-            { id: 'm4', qty: 2, customName: 'Bondiola Desmechada — 704 kcal · 39g prot' },
-            { id: 'm6', qty: 2, customName: 'Cerdo con Batata — 570 kcal · 46g prot' },
-            { id: 'm3', qty: 1, customName: 'Lemon Chicken — 680 kcal · 60g prot' },
-            { id: 'm5', qty: 1, customName: 'Carne Asada — 540 kcal · 41g prot' }
+            { id: 'm8',  qty: 2, customName: 'Pollo a la Naranja' },
+            { id: 'm15', qty: 2, customName: 'Pollo con Salsa de Maní' },
+            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
+            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
+            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
+            { id: 'm11', qty: 1, customName: 'Cerdo Deshilado con Arroz y Glaseados' },
+            { id: 'm9',  qty: 1, customName: 'Bondiola al Pomelo' },
+            { id: 'm1',  qty: 1, customName: 'NPPRO Rice' },
         ]
     },
-    lean5: {
-        name: 'Pack Lean x5',
-        mealsCount: 5,
-        price: 54000,
-        items: [
-            { id: 'm2', qty: 1, customName: 'Carne Oriental — 490 kcal · 48g prot ⭐' },
-            { id: 'm5', qty: 1, customName: 'Carne Asada — 430 kcal · 50g prot' },
-            { id: 'm1', qty: 1, customName: 'NPPRO Rice — 505 kcal · 50g prot' },
-            { id: 'm3', qty: 1, customName: 'Lemon Chicken — 480 kcal · 52g prot' },
-            { id: 'm6', qty: 1, customName: 'Cerdo con Batata — 490 kcal · 46g prot' }
-        ]
-    },
-    lean10: {
-        name: 'Pack Lean x10',
-        mealsCount: 10,
-        price: 104000,
-        items: [
-            { id: 'm2', qty: 2, customName: 'Carne Oriental — 490 kcal · 48g prot ⭐' },
-            { id: 'm5', qty: 2, customName: 'Carne Asada — 430 kcal · 50g prot' },
-            { id: 'm1', qty: 2, customName: 'NPPRO Rice — 505 kcal · 50g prot' },
-            { id: 'm3', qty: 2, customName: 'Lemon Chicken — 480 kcal · 52g prot' },
-            { id: 'm6', qty: 1, customName: 'Cerdo con Batata — 490 kcal · 46g prot' },
-            { id: 'm4', qty: 1, customName: 'Bondiola Desmechada — 530 kcal · 44g prot' }
-        ]
-    }
 };
