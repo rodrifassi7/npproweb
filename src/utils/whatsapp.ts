@@ -15,7 +15,7 @@ export const createWhatsAppLink = (
     // Nombre del pack o tipo
     const tituloPack = premadePackName ? premadePackName.toUpperCase() : `PACK CONGELADO`;
     message += `*Pack:* ${tituloPack}\n`;
-    message += `*Tipo:* Pack Congelado\n`;
+    message += `*Tipo:* ${packType}\n`;
     message += `*Cantidad:* ${totalViandas} viandas\n\n`;
 
     // Detalle de los platos

@@ -4,7 +4,6 @@ import { MENU, CONFIG, PREMADE_PACKS } from '../data/data';
 import { ShoppingCart, ShieldCheck, Flame, Send, Sparkles, Truck, Zap, Snowflake, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import PremadePackCard from '../components/menu/PremadePackCard';
-import { createWhatsAppLink } from '../utils/whatsapp';
 
 const PackBuilder: React.FC = () => {
     const {

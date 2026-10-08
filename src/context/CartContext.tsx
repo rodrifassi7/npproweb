@@ -68,7 +68,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 price: product.price,
                 quantity: 1,
                 useVacuum: useVacuum,
-                image: product.image,
+                image: product.image || '',
                 packEligible: product.packEligible
             };
             return [...prev, newItem];
