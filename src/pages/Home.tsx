@@ -13,6 +13,7 @@ import EntryDiscountModal from '../components/common/EntryDiscountModal';
 
 // Data & Utils
 import { getTodayMenu } from '../data/weeklyMenu';
+import MacrosCalculator from './MacrosCalculator';
 
 // SEO Schema Data
 const JSON_LD = {
@@ -59,9 +60,9 @@ const Home: React.FC = () => {
             {/* Main Content Sections */}
             <EntryDiscountModal />
             <DailySpecialSection dailySpecials={dailySpecials} />
-            <VacuumSection />
             <FeaturesSection />
-            {/* <MacrosCalculator /> */}
+            <VacuumSection />
+            <MacrosCalculator />
             <TrustSection />
             <FAQSection />
         </div>

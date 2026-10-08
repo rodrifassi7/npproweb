@@ -13,7 +13,7 @@ export interface Product {
   category: Category;
   description: string;
   price: number;
-  image: string;
+  image?: string;
   isDailySpecial: boolean;
   isSpicy?: boolean;
   packEligible: boolean;
