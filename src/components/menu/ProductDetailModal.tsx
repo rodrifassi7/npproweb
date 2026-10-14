@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
 import { X, ShoppingBag, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Product } from '../../types';
+import type { MacroInfo, Product } from '../../types';
 import { useCart } from '../../hooks/useCart';
 import { CONFIG } from '../../data/data';
 import AnimatedNumber from '../common/AnimatedNumber';
+
+type Variant = 'mass' | 'lean';
+
+const VARIANTS: { id: Variant; label: string; hint: string }[] = [
+    { id: 'mass', label: 'MASS', hint: 'Volumen' },
+    { id: 'lean', label: 'LEAN', hint: 'Definición' },
+];
+
+const MACRO_LABELS: { key: keyof MacroInfo; label: string; unit: string }[] = [
+    { key: 'kcal', label: 'Kcal', unit: '' },
+    { key: 'protein', label: 'Proteína', unit: 'g' },
+    { key: 'carbs', label: 'Carbos', unit: 'g' },
+    { key: 'fat', label: 'Grasas', unit: 'g' },
+];
 
 interface ProductDetailModalProps {
     product: Product | null;
@@ -14,17 +28,30 @@ interface ProductDetailModalProps {
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
     const { addToCart } = useCart();
     const [useVacuum, setUseVacuum] = useState(false);
+    const [variant, setVariant] = useState<Variant>('mass');
+
+    // Cada vez que se abre otro plato, vuelve a MASS y sin vacío
+    const [lastProductId, setLastProductId] = useState(product?.id);
+    if (product?.id !== lastProductId) {
+        setLastProductId(product?.id);
+        setVariant('mass');
+        setUseVacuum(false);
+    }
+
+    const hasLean = !!product?.macrosLean;
+    const activeMacros = variant === 'lean' && product?.macrosLean ? product.macrosLean : product?.macros;
+    const showMacros = !!activeMacros && activeMacros.kcal > 0;
 
     const handleAddToCart = () => {
         if (!product) return;
-        addToCart(product, { useVacuum });
+        addToCart(product, { useVacuum, variant: hasLean ? variant : undefined });
         onClose();
     };
 
     return (
         <AnimatePresence>
             {product && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -47,9 +74,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                             <X size={20} />
                         </button>
 
-                        {/* Área de Imagen (Izquierda/Arriba) */}
-                        <div className="md:w-1/2 p-8 md:p-12 flex items-center justify-center relative bg-gradient-to-br from-white/[0.03] to-transparent">
-                            <div className="relative w-full aspect-square max-w-[350px]">
+                        {/* Área de Imagen (Izquierda/Arriba) — se oculta si el plato todavía no tiene foto */}
+                        {product.image && (
+                        <div className="md:w-1/2 p-6 md:p-12 flex items-center justify-center relative bg-gradient-to-br from-white/[0.03] to-transparent">
+                            <div className="relative w-full aspect-square max-w-[200px] md:max-w-[350px]">
                                 {/* Efecto de resplandor bajo el plato */}
                                 <div className="absolute inset-0 bg-nppro-green/10 blur-[60px] rounded-full" />
 
@@ -60,38 +88,70 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                                     alt={product.name}
                                     className="w-full h-full object-contain relative z-10 drop-shadow-[0_30px_50px_rgba(0,0,0,0.6)]"
                                 />
-
-
                             </div>
                         </div>
+                        )}
 
                         {/* Información (Derecha) */}
-                        <div className="md:w-1/2 p-8 md:p-12 flex flex-col h-full overflow-y-auto">
+                        <div className={`${product.image ? 'md:w-1/2' : 'w-full md:max-w-xl md:mx-auto'} p-8 md:p-12 flex flex-col h-full overflow-y-auto`}>
                             <div className="mb-8">
                                 <div className="flex items-center gap-2 text-nppro-green mb-2">
                                     <Zap size={12} fill="currentColor" />
                                     <span className="text-[10px] font-black uppercase tracking-[0.3em]">Detalle de Producto</span>
                                 </div>
-                                <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-[0.9] mb-4">
+                                <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-[0.9]">
                                     {product.name}
                                 </h2>
-                                <p className="text-white/50 text-base font-light leading-relaxed">
-                                    {product.description}
-                                </p>
                             </div>
 
+                            {/* Switch MASS / LEAN */}
+                            {hasLean && (
+                                <div className="mb-4">
+                                    <div className="relative grid grid-cols-2 p-1 bg-white/[0.03] border border-white/10 rounded-2xl">
+                                        {VARIANTS.map((v) => {
+                                            const active = variant === v.id;
+                                            return (
+                                                <button
+                                                    key={v.id}
+                                                    onClick={() => setVariant(v.id)}
+                                                    aria-pressed={active}
+                                                    className={`relative z-10 py-3 rounded-xl flex flex-col items-center leading-none transition-colors ${active ? 'text-black' : 'text-white/50 hover:text-white'}`}
+                                                >
+                                                    {active && (
+                                                        <motion.span
+                                                            layoutId="variant-pill"
+                                                            className="absolute inset-0 -z-10 bg-nppro-green rounded-xl"
+                                                            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                                                        />
+                                                    )}
+                                                    <span className="text-sm font-black italic tracking-wider">{v.label}</span>
+                                                    <span className={`text-[9px] font-bold uppercase tracking-[0.2em] mt-1 ${active ? 'text-black/60' : 'text-white/30'}`}>{v.hint}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Macros con estilo de "Dashboard" */}
-                            {product.macros && (
-                                <div className="grid grid-cols-2 gap-3 mb-8">
-                                    {Object.entries(product.macros).map(([key, val]) => (
+                            {showMacros && activeMacros && (
+                                <div className="grid grid-cols-2 gap-3 mb-5">
+                                    {MACRO_LABELS.map(({ key, label, unit }) => (
                                         <div key={key} className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-                                            <div className="text-[10px] uppercase text-white/30 font-bold mb-1">{key}</div>
+                                            <div className="text-[10px] uppercase text-white/30 font-bold mb-1">{label}</div>
                                             <div className="text-xl font-black italic text-nppro-green">
-                                                <AnimatedNumber value={val} duration={1000} />
+                                                <AnimatedNumber value={`${activeMacros[key]}${unit}`} duration={600} />
                                             </div>
                                         </div>
                                     ))}
                                 </div>
+                            )}
+
+                            {/* Qué lleva el plato */}
+                            {product.description && (
+                                <p className="text-white/50 text-sm font-light leading-relaxed mb-8">
+                                    {product.description}
+                                </p>
                             )}
 
                             {/* Opciones de compra */}
