@@ -13,7 +13,7 @@ const PACK_SHIPPING: Record<string, number> = {
 
 interface CartContextType {
     cart: CartItem[];
-    addToCart: (product: Product, options: { useVacuum: boolean }) => void;
+    addToCart: (product: Product, options: { useVacuum: boolean; variant?: 'mass' | 'lean' }) => void;
     removeFromCart: (itemKey: string) => void;
     updateQuantity: (itemKey: string, quantity: number) => void;
     clearCart: () => void;
@@ -47,9 +47,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
     }, [cart]);
 
-    const addToCart = (product: Product, options: { useVacuum: boolean }) => {
-        const { useVacuum } = options;
-        const itemKey = `${product.id}_${useVacuum ? "vac" : "std"}`;
+    const addToCart = (product: Product, options: { useVacuum: boolean; variant?: 'mass' | 'lean' }) => {
+        const { useVacuum, variant } = options;
+        // La versión elegida (MASS/LEAN) separa líneas en el carrito y viaja en el nombre al pedido de WhatsApp.
+        const itemKey = `${product.id}_${variant ?? "na"}_${useVacuum ? "vac" : "std"}`;
+        const itemName = variant ? `${product.name} (${variant.toUpperCase()})` : product.name;
 
         setCart((prev) => {
             const existing = prev.find((item) => item.key === itemKey);
@@ -63,7 +65,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const newItem: CartItem = {
                 key: itemKey,
                 id: product.id,
-                name: product.name,
+                name: itemName,
                 category: product.category,
                 price: product.price,
                 quantity: 1,

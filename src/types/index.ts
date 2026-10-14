@@ -18,7 +18,8 @@ export interface Product {
   isSpicy?: boolean;
   packEligible: boolean;
   vacuumAvailable: boolean;
-  macros?: MacroInfo;
+  macros?: MacroInfo;      // MASS (Volumen)
+  macrosLean?: MacroInfo;  // LEAN (Definición). Si falta, el modal no muestra el switch.
   ingredients?: string[];
   tags?: string[];
 }
