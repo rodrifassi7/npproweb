@@ -1,208 +1,160 @@
-import React, { useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Target } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MENU } from '../../data/data';
 
-const ParticleCanvas: React.FC = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+// Platos que van girando en la portada (se leen del menú, así los macros siempre coinciden).
+const HERO_IDS = ['m10', 'm6', 'm15', 'm12', 'm1'];
+const HERO_DISHES = HERO_IDS
+    .map(id => MENU.find(p => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p && p.image && p.macros));
 
+const ROTATE_MS = 4200;
+
+const prefersReducedMotion = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const HeroSection: React.FC = () => {
+    const [index, setIndex] = useState(0);
+    const [extrasReady, setExtrasReady] = useState(false);
+    const [paused, setPaused] = useState(false);
+    const sectionRef = useRef<HTMLElement>(null);
+
+    // El primer plato carga ya; el resto, un rato después (no compiten con la carga inicial).
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        const t = setTimeout(() => setExtrasReady(true), 1200);
+        return () => clearTimeout(t);
+    }, []);
 
-        let animId: number;
-        const N = 60;
+    // Rotación automática de platos.
+    useEffect(() => {
+        if (!extrasReady || paused || prefersReducedMotion()) return;
+        const t = setInterval(() => {
+            if (document.visibilityState === 'visible') setIndex(i => (i + 1) % HERO_DISHES.length);
+        }, ROTATE_MS);
+        return () => clearInterval(t);
+    }, [extrasReady, paused]);
 
-        const resize = () => {
-            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-            canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-        };
-
-        resize();
-
-        const dpr = window.devicePixelRatio;
-        const particles = Array.from({ length: N }, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.5 * dpr,
-            vy: (Math.random() - 0.5) * 0.5 * dpr,
-            r: (Math.random() * 1.5 + 0.8) * dpr,
-        }));
-
-        const DIST = 100 * dpr;
-
-        const draw = () => {
-            const W = canvas.width;
-            const H = canvas.height;
-
-            ctx.clearRect(0, 0, W, H);
-
-            for (let i = 0; i < N; i++) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                if (p.x < 0 || p.x > W) p.vx *= -1;
-                if (p.y < 0 || p.y > H) p.vy *= -1;
-
-                for (let j = i + 1; j < N; j++) {
-                    const q = particles[j];
-                    const dx = p.x - q.x;
-                    const dy = p.y - q.y;
-                    const d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < DIST) {
-                        const alpha = 0.18 * (1 - d / DIST);
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(0, 255, 0, ${alpha})`;
-                        ctx.lineWidth = 0.5 * dpr;
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(q.x, q.y);
-                        ctx.stroke();
-                    }
-                }
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0, 255, 0, 0.55)';
-                ctx.fill();
-            }
-
-            animId = requestAnimationFrame(draw);
-        };
-
-        draw();
-
-        const handleResize = () => {
-            resize();
-            particles.forEach(p => {
-                p.x = Math.min(p.x, canvas.width);
-                p.y = Math.min(p.y, canvas.height);
+    // Al bajar, el plato gira y se aleja. Una sola variable CSS, actualizada por frame.
+    useEffect(() => {
+        const el = sectionRef.current;
+        if (!el || prefersReducedMotion()) return;
+        let raf = 0;
+        const onScroll = () => {
+            if (raf) return;
+            raf = requestAnimationFrame(() => {
+                raf = 0;
+                const p = Math.min(Math.max(window.scrollY / el.offsetHeight, 0), 1);
+                el.style.setProperty('--hero-p', p.toFixed(3));
             });
         };
-
-        window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', onScroll, { passive: true });
         return () => {
-            cancelAnimationFrame(animId);
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', onScroll);
+            cancelAnimationFrame(raf);
         };
     }, []);
 
-    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
-};
-
-const HeroSection: React.FC = () => {
-    const { scrollY } = useScroll();
-    const yContent = useTransform(scrollY, [0, 600], [0, 80]);
-    const opacityContent = useTransform(scrollY, [0, 500], [1, 0]);
-    const canvasOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+    const current = HERO_DISHES[index];
 
     return (
-        <section className="relative min-h-[100svh] overflow-hidden bg-[#050505]">
+        <section ref={sectionRef} className="hero relative overflow-hidden bg-[#0B0B0B]">
+            {/* Luz suave detrás del plato (gradiente, no blur: es liviano en celulares) */}
+            <div className="hero-glow pointer-events-none absolute inset-0" aria-hidden="true" />
 
-            {/* PARTÍCULAS */}
-            <motion.div
-                style={{ opacity: canvasOpacity }}
-                className="absolute inset-0 z-0"
-            >
-                <ParticleCanvas />
-            </motion.div>
+            <div className="container relative mx-auto grid items-center gap-8 px-6 pb-14 pt-28 md:min-h-[100svh] md:grid-cols-[1.05fr_1fr] md:gap-6 md:pb-10 md:pt-24">
+                {/* Texto */}
+                <div className="hero-copy min-w-0 max-w-xl">
+                    <h1 className="mb-5 pt-[0.12em] text-[13.5vw] font-black uppercase italic leading-[0.98] tracking-tighter sm:text-[10vw] md:mb-6 md:text-[5.6rem] lg:text-[6.6rem]">
+                        <span className="hero-line block" style={{ '--d': '0ms' } as React.CSSProperties}>Calentás.</span>
+                        <span className="hero-line block" style={{ '--d': '140ms' } as React.CSSProperties}>Comés.</span>
+                        <span className="hero-line block" style={{ '--d': '280ms' } as React.CSSProperties}>Rendís.</span>
+                    </h1>
 
-            {/* GLOWS */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-nppro-green/5 blur-[140px] rounded-full" />
-                <div className="absolute bottom-0 right-0 w-72 h-72 bg-nppro-green/[0.03] blur-[100px] rounded-full" />
-            </div>
+                    <p className="hero-fade mb-7 max-w-md text-[15px] leading-relaxed text-white/60 md:mb-9 md:text-lg" style={{ '--d': '420ms' } as React.CSSProperties}>
+                        Viandas altas en proteína, hechas en Trelew. Elegí Volumen o Definición,
+                        armá tu pack y lo tenés listo en minutos.
+                    </p>
 
-            {/* CONTENIDO */}
-            <div className="container mx-auto px-6 relative z-10 min-h-[100svh] flex items-center justify-center pt-24 md:pt-0">
-                <motion.div
-                    style={{ y: yContent, opacity: opacityContent }}
-                    className="max-w-5xl mx-auto flex flex-col items-center text-center"
-                >
-                    {/* Badge */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: 'easeOut' }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md mb-8"
-                    >
-                        <span className="w-1.5 h-1.5 rounded-full bg-nppro-green animate-pulse" />
-                        <span className="text-white/60 text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase">
-                            Viandas proteicas · Trelew, Chubut
-                        </span>
-                    </motion.div>
-
-                    {/* Título */}
-                    <motion.h1
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-                        className="text-[11vw] sm:text-[8vw] md:text-[6.5rem] lg:text-[7.5rem] font-black leading-[0.9] italic tracking-tighter uppercase mb-6"
-                    >
-                        Hecho acá.{' '}
-                        <span
-                            className="text-nppro-green"
-                            style={{ textShadow: '0 0 60px rgba(0,255,0,0.25)' }}
-                        >
-                            Pensado para vos.
-                        </span>
-                    </motion.h1>
-
-                    {/* Subtítulo */}
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        className="text-base md:text-xl text-white/50 font-light max-w-md leading-relaxed mb-10 md:mb-14"
-                    >
-                        Meal prep de alto rendimiento. Viandas listas,
-                        selladas al vacío, entregadas en tu puerta.
-                    </motion.p>
-
-                    {/* CTAs */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.45 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full"
-                    >
-                        <Link to="/menu" className="w-full sm:w-auto">
-                            <button
-                                className="w-full px-8 py-4 bg-nppro-green text-black font-black italic rounded-full flex items-center justify-center gap-3 text-sm md:text-base transition-all hover:scale-105 active:scale-95"
-                                style={{ boxShadow: '0 0 40px rgba(0,255,0,0.2)' }}
-                            >
-                                VER MENÚ SEMANAL
-                                <ArrowRight size={18} strokeWidth={3} />
-                            </button>
-                        </Link>
-
+                    <div className="hero-fade flex flex-row gap-3" style={{ '--d': '520ms' } as React.CSSProperties}>
                         <Link
                             to="/packs"
-                            className="flex items-center gap-2 text-white/40 hover:text-white font-bold tracking-[0.15em] text-[11px] md:text-xs py-3 group transition-colors"
+                            className="inline-flex flex-1 items-center justify-center rounded-full bg-nppro-green px-5 py-3.5 text-sm sm:flex-none sm:px-8 md:py-4 font-black uppercase italic text-black transition-transform hover:scale-[1.03] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nppro-green md:text-base"
                         >
-                            <Target size={15} className="group-hover:text-nppro-green transition-colors" />
-                            VER PACKS CON DESCUENTO
+                            Armar mi pack
                         </Link>
-                    </motion.div>
-                </motion.div>
+                        <Link
+                            to="/menu"
+                            className="inline-flex flex-1 items-center justify-center rounded-full border border-white/15 px-5 py-3.5 text-sm sm:flex-none sm:px-8 md:py-4 font-bold text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:text-base"
+                        >
+                            Ver el menú
+                        </Link>
+                    </div>
+
+                    <p className="hero-fade mt-6 text-sm text-white/45" style={{ '--d': '620ms' } as React.CSSProperties}>
+                        Pack de 10: <span className="font-semibold text-white/80">$10.000 por comida</span>, con envío gratis en Trelew.
+                    </p>
+                </div>
+
+                {/* Plato */}
+                <div
+                    className="relative mx-auto w-full min-w-0 max-w-[340px] md:max-w-[520px]"
+                    onMouseEnter={() => setPaused(true)}
+                    onMouseLeave={() => setPaused(false)}
+                >
+                    <div className="hero-plate relative aspect-square">
+                        {HERO_DISHES.map((dish, i) =>
+                            i === 0 || extrasReady ? (
+                                <img
+                                    key={dish.id}
+                                    src={dish.image}
+                                    alt={i === index ? dish.name : ''}
+                                    aria-hidden={i !== index}
+                                    width={640}
+                                    height={640}
+                                    decoding="async"
+                                    {...(i === 0 ? { fetchPriority: 'high' as const } : { loading: 'lazy' as const })}
+                                    className={`hero-dish absolute inset-0 h-full w-full object-contain ${i === index ? 'is-active' : ''}`}
+                                />
+                            ) : null
+                        )}
+                    </div>
+
+                    {/* Plato actual y sus macros */}
+                    <div className="hero-fade mt-4 text-center" style={{ '--d': '700ms' } as React.CSSProperties} aria-live="polite">
+                        <Link to="/menu" className="text-sm font-bold text-white hover:text-nppro-green md:text-base">
+                            {current.name}
+                        </Link>
+                        <dl className="mt-3 flex justify-center gap-6 tabular-nums">
+                            <div>
+                                <dt className="text-xs text-white/45">Proteína</dt>
+                                <dd className="text-xl font-black text-nppro-green">{current.macros?.protein} g</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs text-white/45">Calorías</dt>
+                                <dd className="text-xl font-black">{current.macros?.kcal}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs text-white/45">Carbohidratos</dt>
+                                <dd className="text-xl font-black">{current.macros?.carbs} g</dd>
+                            </div>
+                        </dl>
+
+                        <div className="mt-4 flex justify-center gap-2" role="tablist" aria-label="Elegir plato">
+                            {HERO_DISHES.map((dish, i) => (
+                                <button
+                                    key={dish.id}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={i === index}
+                                    aria-label={dish.name}
+                                    onClick={() => { setIndex(i); setExtrasReady(true); setPaused(true); }}
+                                    className={`h-1.5 rounded-full transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${i === index ? 'w-6 bg-nppro-green' : 'w-1.5 bg-white/25 hover:bg-white/50'}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            {/* SCROLL INDICATOR */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
-            >
-
-                <motion.div
-                    animate={{ y: [0, 6, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-                    className="w-[1px] h-8 bg-gradient-to-b from-nppro-green/50 to-transparent"
-                />
-            </motion.div>
-
         </section>
     );
 };

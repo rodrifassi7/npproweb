@@ -7,8 +7,8 @@ const LocalSeo: React.FC = () => {
         <div className="min-h-screen bg-[#0B0B0B] text-white pt-24 pb-20 relative overflow-hidden">
             {/* Background Decorative Glows */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-nppro-green/5 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-nppro-green/10 blur-[100px] rounded-full" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.08),transparent)]" />
+                <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.12),transparent)]" />
             </div>
 
             <div className="container mx-auto px-6 max-w-5xl relative z-10">
@@ -109,7 +109,7 @@ const LocalSeo: React.FC = () => {
                     className="text-center relative overflow-hidden bg-gradient-to-br from-[#151515] to-[#0B0B0B] p-12 rounded-[2.5rem] border border-white/5"
                 >
                     {/* Subtle inner glow */}
-                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-nppro-green/10 blur-[80px] rounded-full" />
+                    <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.12),transparent)]" />
 
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 italic">¿Listo para transformar tu alimentación?</h2>
                     <p className="text-gray-400 mb-10 max-w-xl mx-auto text-lg leading-relaxed">

@@ -1,35 +1,26 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Menu from './pages/Menu';
-import PackBuilder from './pages/PackBuilder';
-import Checkout from './pages/Checkout';
-import MacrosPage from './pages/MacrosCalculator';
-import { AnimatePresence, motion } from 'framer-motion';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingWhatsAppButton from './components/common/FloatingWhatsAppButton';
 
-import LocalSeo from './pages/LocalSeo';
-import GymLanding from './pages/GymLanding';
+// Cada página se descarga recién cuando alguien entra a ella.
+const Menu = lazy(() => import('./pages/Menu'));
+const PackBuilder = lazy(() => import('./pages/PackBuilder'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const MacrosPage = lazy(() => import('./pages/MacrosCalculator'));
+const LocalSeo = lazy(() => import('./pages/LocalSeo'));
+const GymLanding = lazy(() => import('./pages/GymLanding'));
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.3 }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  // Fundido de entrada en CSS: no frena el cambio de página esperando una animación de salida.
+  return <div key={location.pathname} className="page-enter">{children}</div>;
 };
+
+const PageFallback = () => <div className="min-h-[100svh] bg-[#0B0B0B]" aria-busy="true" />;
 
 function App() {
   return (
@@ -39,15 +30,17 @@ function App() {
         <Navbar />
         <main className="flex-grow">
           <PageWrapper>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/menu" element={<Menu />} />
-              <Route path="/packs" element={<PackBuilder />} />
-              <Route path="/macros" element={<MacrosPage />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/viandas-en-trelew" element={<LocalSeo />} />
-              <Route path="/gym" element={<GymLanding />} />
-            </Routes>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/menu" element={<Menu />} />
+                <Route path="/packs" element={<PackBuilder />} />
+                <Route path="/macros" element={<MacrosPage />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/viandas-en-trelew" element={<LocalSeo />} />
+                <Route path="/gym" element={<GymLanding />} />
+              </Routes>
+            </Suspense>
           </PageWrapper>
         </main>
         <FloatingWhatsAppButton />

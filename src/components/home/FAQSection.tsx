@@ -9,7 +9,7 @@ const FAQSection: React.FC = () => {
     const faqs = [
         {
             q: "¿Qué días entregan?",
-            a: "Entregamos en Trelew los días Lunes y Miercoles. Una vez que realices tu pedido, nos comunicamos con vos para coordinar la entrega que mejor te quede."
+            a: "Entregamos todos los días en Trelew. Los packs congelados se entregan lunes o martes. Cuando hacés el pedido, te escribimos por WhatsApp para coordinar el horario."
         },
         {
             q: "¿Cómo se pagan los pedidos?",
@@ -21,7 +21,7 @@ const FAQSection: React.FC = () => {
         },
         {
             q: "¿Cuánto duran las viandas?",
-            a: "Nuestras viandas frescas duran 24-48 horas en heladera. Si elegís la opción de envasado al vacío, la duración se extiende hasta los 12 días manteniendo la textura y sabor original."
+            a: "Las viandas frescas duran 24 a 48 horas en heladera. Envasadas al vacío duran hasta 5 días en heladera, y si no las comés a tiempo las podés pasar al freezer. Los packs congelados se guardan directo en el freezer."
         }
     ];
 

@@ -4,16 +4,17 @@ import { Link } from 'react-router-dom';
 // Components
 import HeroSection from '../components/home/HeroSection';
 import DailySpecialSection from '../components/home/DailySpecialSection';
+import PacksSection from '../components/home/PacksSection';
+import HowItWorksSection from '../components/home/HowItWorksSection';
+import GoalsSection from '../components/home/GoalsSection';
 import VacuumSection from '../components/home/VacuumSection';
-import FeaturesSection from '../components/home/FeaturesSection';
-import TrustSection from '../components/home/TrustSection';
+import TestimonialsSection from '../components/home/TestimonialsSection';
+import MacrosTeaser from '../components/home/MacrosTeaser';
 import FAQSection from '../components/home/FAQSection';
-// import MacrosCalculator from '../components/MacrosCalculator/MacrosCalculator';
 import EntryDiscountModal from '../components/common/EntryDiscountModal';
 
 // Data & Utils
 import { getTodayMenu } from '../data/weeklyMenu';
-import MacrosCalculator from './MacrosCalculator';
 
 // SEO Schema Data
 const JSON_LD = {
@@ -43,28 +44,25 @@ const Home: React.FC = () => {
             </script>
 
             <HeroSection />
-
-            {/* SEO Banner */}
-            <section className="bg-[#0B0B0B] pt-4 pb-2 text-center border-b border-white/5">
-                <div className="container mx-auto px-4">
-                    <p className="text-gray-400 text-sm md:text-base">
-                        Encontrá las mejores <strong className="text-white font-medium">viandas proteicas en Trelew</strong>.
-                        Somos tu opción de <strong className="text-white font-medium">meal prep saludable</strong> y <strong className="text-white font-medium">comida fitness</strong> lista para consumir.
-                        <Link to="/viandas-en-trelew" className="text-nppro-green hover:underline ml-2 transition-colors">
-                            Ver info local
-                        </Link>
-                    </p>
-                </div>
-            </section>
-
-            {/* Main Content Sections */}
             <EntryDiscountModal />
             <DailySpecialSection dailySpecials={dailySpecials} />
-            <FeaturesSection />
+            <PacksSection />
+            <HowItWorksSection />
+            <GoalsSection />
             <VacuumSection />
-            <MacrosCalculator />
-            <TrustSection />
+            <TestimonialsSection />
             <FAQSection />
+            <MacrosTeaser />
+
+            {/* Texto para buscadores, al pie */}
+            <section className="border-t border-white/5 bg-[#0B0B0B] py-8">
+                <p className="container mx-auto px-6 text-center text-sm text-white/40">
+                    Viandas proteicas en Trelew: meal prep saludable y comida fitness lista para consumir.{' '}
+                    <Link to="/viandas-en-trelew" className="text-white/60 underline-offset-4 hover:text-nppro-green hover:underline">
+                        Más info sobre entregas en Trelew
+                    </Link>
+                </p>
+            </section>
         </div>
     );
 };

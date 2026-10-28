@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { CONFIG } from '../data/data';
+import { formatPrice } from '../utils/format';
 import { MapPin, Truck, Store, MessageCircle, AlertCircle, Trash2, ShoppingCart, Ticket, Loader2, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+const getSupabase = () => import('../lib/supabase').then(m => m.supabase);
 
 const Checkout: React.FC = () => {
     const { cart, subtotal, packDiscount, total, vacuumTotal, removeFromCart, currentDiscountTier } = useCart();
+    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -38,6 +40,7 @@ const Checkout: React.FC = () => {
 
         try {
             // RPC call to validate_coupon
+            const supabase = await getSupabase();
             const { data, error } = await supabase.rpc('validate_coupon', {
                 input_code: couponCode,
                 input_phone: formData.phone || null
@@ -108,6 +111,7 @@ WEB ORDER DETALLES:
                 discount_percent: appliedCoupon?.percent || 0,
             };
 
+            const supabase = await getSupabase();
             const { error } = await supabase.from('orders').insert([orderData]);
 
             if (error) {
@@ -166,15 +170,15 @@ WEB ORDER DETALLES:
 
         message += `*DETALLE DEL PEDIDO:*\n`;
         cart.forEach(item => {
-            message += `• ${item.quantity}x ${item.name} ($${item.price * item.quantity})\n`;
+            message += `• ${item.quantity}x ${item.name} (${formatPrice(item.price * item.quantity)})\n`;
         });
 
         message += `\n*RESUMEN TOTAL:*\n`;
-        message += `Subtotal: $${subtotal}\n`;
-        if (packDiscount > 0) message += `Descuento Pack (${Math.round(currentDiscountTier?.discount! * 100)}%): -$${packDiscount}\n`;
-        if (appliedCoupon) message += `🎟️ Cupón (${appliedCoupon.code}): -$${couponDiscountAmount}\n`;
-        if (vacuumTotal > 0) message += `Extra Vacío: $${vacuumTotal}\n`;
-        message += `*TOTAL FINAL: $${finalTotal}*\n`;
+        message += `Subtotal: ${formatPrice(subtotal)}\n`;
+        if (packDiscount > 0) message += `Descuento Pack (${Math.round(currentDiscountTier?.discount! * 100)}%): -${formatPrice(packDiscount)}\n`;
+        if (appliedCoupon) message += `🎟️ Cupón (${appliedCoupon.code}): -${formatPrice(couponDiscountAmount)}\n`;
+        if (vacuumTotal > 0) message += `Extra Vacío: ${formatPrice(vacuumTotal)}\n`;
+        message += `*TOTAL FINAL: ${formatPrice(finalTotal)}*\n`;
 
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
@@ -200,7 +204,7 @@ WEB ORDER DETALLES:
     return (
         <div className="pt-32 pb-24 min-h-screen">
             <div className="container mx-auto px-6">
-                <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-12 uppercase">Checkout</h1>
+                <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-10 md:mb-12 uppercase leading-none">Tu pedido</h1>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
@@ -209,7 +213,7 @@ WEB ORDER DETALLES:
 
                         {/* Personal Data */}
                         <div className="glass p-8 rounded-[32px]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> TUS DATOS</h2>
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> Tus datos</h2>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-2 ml-1">Nombre completo *</label>
@@ -238,7 +242,7 @@ WEB ORDER DETALLES:
 
                         {/* Delivery Type */}
                         <div className="glass p-8 rounded-[32px]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> ENTREGA</h2>
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> Entrega</h2>
 
                             <div className="grid grid-cols-2 gap-4 mb-8 text-center">
                                 <button
@@ -298,7 +302,7 @@ WEB ORDER DETALLES:
 
                         {/* Payment & Extras */}
                         <div className="glass p-8 rounded-[32px]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> PAGO Y EXTRAS</h2>
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> Pago y extras</h2>
 
                             <div className="space-y-6">
                                 <div>
@@ -338,7 +342,7 @@ WEB ORDER DETALLES:
                                         </div>
                                         <div className="flex-1">
                                             <div className="font-bold text-sm">¿Envasar todo al vacío?</div>
-                                            <p className="text-[10px] text-nppro-gray uppercase font-bold mt-0.5">+ ${CONFIG.VACUUM_PRICE_PER_ITEM} por comida • Ideal para durar +10 días</p>
+                                            <p className="text-[10px] text-nppro-gray uppercase font-bold mt-0.5">+ {formatPrice(CONFIG.VACUUM_PRICE_PER_ITEM)} por comida. Dura hasta 5 días en heladera</p>
                                         </div>
                                     </label>
                                 </div>
@@ -351,13 +355,13 @@ WEB ORDER DETALLES:
                         <div className="sticky top-32 glass rounded-[40px] overflow-hidden border-white/10">
                             <div className="p-8 border-b border-white/5">
                                 <h2 className="text-2xl font-black italic mb-2 uppercase flex items-center justify-between">
-                                    Resumen <span className="text-nppro-gray text-sm font-bold tracking-widest">{cart.length} LÍNEAS</span>
+                                    Resumen <span className="text-nppro-gray text-sm font-bold">{cartCount} {cartCount === 1 ? 'comida' : 'comidas'}</span>
                                 </h2>
                                 <button
                                     onClick={clearCart}
                                     className="text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-colors flex items-center gap-1"
                                 >
-                                    <Trash2 size={10} /> Vaciar Carrito
+                                    <Trash2 size={10} /> Vaciar carrito
                                 </button>
                             </div>
 
@@ -365,12 +369,12 @@ WEB ORDER DETALLES:
                                 {cart.map(item => (
                                     <div key={item.key} className="flex gap-4 group">
                                         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
-                                            <img src={item.image} className="w-full h-full object-cover" />
+                                            <img src={item.image} alt="" loading="lazy" className="w-full h-full object-contain" />
                                         </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between font-bold text-sm">
-                                                <span className="truncate">{item.quantity}x {item.name} {item.useVacuum && <span className="text-[9px] text-nppro-green font-black ml-1">(VACÍO)</span>}</span>
-                                                <span>${item.price * item.quantity + (item.useVacuum ? CONFIG.vacuumExtraPrice * item.quantity : 0)}</span>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex justify-between gap-3 font-bold text-sm">
+                                                <span className="min-w-0 leading-snug">{item.quantity}x {item.name} {item.useVacuum && <span className="text-[9px] text-nppro-green font-black ml-1">(VACÍO)</span>}</span>
+                                                <span className="shrink-0 tabular-nums">{formatPrice(item.price * item.quantity + (item.useVacuum ? CONFIG.vacuumExtraPrice * item.quantity : 0))}</span>
                                             </div>
                                             <div className="flex justify-between mt-1">
                                                 <span className="text-[10px] text-nppro-gray font-black uppercase tracking-widest">{item.category}</span>
@@ -386,17 +390,17 @@ WEB ORDER DETALLES:
                             <div className="p-8 bg-white/5 space-y-4 border-t border-white/10 text-sm">
                                 <div className="flex justify-between text-nppro-gray">
                                     <span>Productos</span>
-                                    <span>${subtotal}</span>
+                                    <span className="tabular-nums">{formatPrice(subtotal)}</span>
                                 </div>
                                 {packDiscount > 0 && (
                                     <div className="flex justify-between text-nppro-green font-bold">
                                         <span>Descuento Pack</span>
-                                        <span>-${packDiscount}</span>
+                                        <span className="tabular-nums">-{formatPrice(packDiscount)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-nppro-gray italic">
                                     <span>Extra al vacío</span>
-                                    <span>+${vacuumTotal}</span>
+                                    <span className="tabular-nums">+{formatPrice(vacuumTotal)}</span>
                                 </div>
 
                                 {/* Coupon Section */}
@@ -446,14 +450,14 @@ WEB ORDER DETALLES:
                                     {appliedCoupon && (
                                         <div className="flex justify-between text-nppro-green font-bold">
                                             <span>Descuento Cupón</span>
-                                            <span>-${couponDiscountAmount}</span>
+                                            <span className="tabular-nums">-{formatPrice(couponDiscountAmount)}</span>
                                         </div>
                                     )}
                                 </div>
                                 <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-                                    <div className="font-black italic uppercase text-lg tracking-tighter">TOTAL A PAGAR</div>
+                                    <div className="font-black italic uppercase text-lg tracking-tighter">Total</div>
                                     <div className="text-3xl font-black text-nppro-green shadow-green-500/20 drop-shadow-sm">
-                                        ${finalTotal}
+                                        {formatPrice(finalTotal)}
                                     </div>
                                 </div>
                             </div>

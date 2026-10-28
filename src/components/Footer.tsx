@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
         <footer className="relative bg-[#050505] pt-24 pb-8 overflow-hidden">
             {/* Luces de ambiente sutiles */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-nppro-green/50 to-transparent" />
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-nppro-green/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.08),transparent)] pointer-events-none" />
 
             {/* Ticker de Marca Infinito (Opcional, da un toque muy pro) */}
             <div className="absolute top-10 flex whitespace-nowrap opacity-[0.03] select-none pointer-events-none border-y border-white py-4 overflow-hidden">
@@ -116,7 +116,8 @@ const Footer: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-nppro-green uppercase font-black tracking-[0.2em] mb-1">Entregas</p>
-                                        <p className="text-white text-base font-medium">Lunes - Viernes 8:00 - 18:00</p>
+                                        <p className="text-white text-base font-medium">Todos los días en Trelew</p>
+                                        <p className="text-white/50 text-sm">Packs: lunes o martes</p>
                                     </div>
                                 </div>
                             </div>

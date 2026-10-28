@@ -79,7 +79,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                         <div className="md:w-1/2 p-6 md:p-12 flex items-center justify-center relative bg-gradient-to-br from-white/[0.03] to-transparent">
                             <div className="relative w-full aspect-square max-w-[200px] md:max-w-[350px]">
                                 {/* Efecto de resplandor bajo el plato */}
-                                <div className="absolute inset-0 bg-nppro-green/10 blur-[60px] rounded-full" />
+                                <div className="absolute inset-0 rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.15),transparent)]" />
 
                                 <motion.img
                                     initial={{ rotate: -10, scale: 0.8 }}
