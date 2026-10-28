@@ -91,11 +91,13 @@ body {
 
 
 /* ---------- Movimiento ---------- */
+/* Solo opacidad: una animación de transform que queda aplicada rompe los
+   modales con position: fixed (quedan fuera de pantalla). */
 @keyframes page-enter {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-.page-enter { animation: page-enter 0.35s ease-out both; }
+.page-enter { animation: page-enter 0.3s ease-out backwards; }
 
 /* Aparición al hacer scroll (la activa <Reveal/> con IntersectionObserver) */
 .reveal {
