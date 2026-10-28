@@ -109,11 +109,11 @@ const PackBuilder: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
                                     <Truck size={13} className="text-nppro-green shrink-0" />
-                                    <span className="text-[11px] font-bold text-white/70">Entregas lunes y jueves</span>
+                                    <span className="text-[11px] font-bold text-white/70">Se entregan lunes o martes</span>
                                 </div>
                                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
                                     <Clock size={13} className="text-white/50 shrink-0" />
-                                    <span className="text-[11px] font-bold text-white/70">Pedidos hasta viernes 14 hs (entrega lunes) · martes 14 hs (entrega jueves)</span>
+                                    <span className="text-[11px] font-bold text-white/70">Pedidos hasta el viernes</span>
                                 </div>
                             </div>
                         </div>

@@ -72,7 +72,7 @@ const HeroSection: React.FC = () => {
 
                     <p className="hero-fade mb-7 max-w-md text-[15px] leading-relaxed text-white/60 md:mb-9 md:text-lg" style={{ '--d': '420ms' } as React.CSSProperties}>
                         Viandas altas en proteína, hechas en Trelew. Elegí Volumen o Definición,
-                        armá tu pack y lo tenés listo en 3 minutos de microondas.
+                        armá tu pack y lo tenés listo en minutos.
                     </p>
 
                     <div className="hero-fade flex flex-row gap-3" style={{ '--d': '520ms' } as React.CSSProperties}>

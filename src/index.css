@@ -166,3 +166,9 @@ body {
   .hero-copy { transform: none; opacity: 1; }
   .hero-plate > .hero-dish, .hero-plate > .hero-dish.is-active { transition: opacity 0.3s ease; transform: none; }
 }
+
+/* ---------- Secciones del inicio ---------- */
+.pack-plate { box-shadow: 0 0 0 4px #0B0B0B; }
+.goal-plate { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.goal-plate.is-small { transform: scale(0.84) rotate(-12deg); }
+@media (prefers-reduced-motion: reduce) { .goal-plate { transition: none; } }

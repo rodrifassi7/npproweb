@@ -116,7 +116,8 @@ const Footer: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-nppro-green uppercase font-black tracking-[0.2em] mb-1">Entregas</p>
-                                        <p className="text-white text-base font-medium">Lunes - Viernes 8:00 - 18:00</p>
+                                        <p className="text-white text-base font-medium">Todos los días en Trelew</p>
+                                        <p className="text-white/50 text-sm">Packs: lunes o martes</p>
                                     </div>
                                 </div>
                             </div>

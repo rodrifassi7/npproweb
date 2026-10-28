@@ -1,8 +1,10 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { BicepsFlexed, Flame, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import type { Product } from '../../types';
+import FadeIn from '../common/FadeIn';
+import { formatPrice } from '../../utils/format';
 
 interface DailySpecialSectionProps {
     dailySpecials: {
@@ -18,119 +20,69 @@ const DailySpecialSection: React.FC<DailySpecialSectionProps> = ({ dailySpecials
         addToCart(product, { useVacuum: false });
         const buttonEl = event.currentTarget;
         import('../../utils/flyToCart').then(({ flyToCart }) => {
-            flyToCart(
-                buttonEl,
-                '#cart-icon-desktop',
-                '#cart-icon-mobile',
-                product.image
-            );
+            flyToCart(buttonEl, '#cart-icon-desktop', '#cart-icon-mobile', product.image);
         });
     };
 
     const specials = [
         { product: dailySpecials.lunch, shift: 'Almuerzo' },
-        { product: dailySpecials.dinner, shift: 'Cena' }
+        { product: dailySpecials.dinner, shift: 'Cena' },
     ];
 
     return (
-        <section className="min-h-[100svh] flex flex-col justify-center py-20 md:py-24 relative overflow-hidden bg-[#070707]">
-            <div className="container mx-auto px-6 relative z-10 flex flex-col items-center">
-
-                {/* Header */}
-                <div className="mb-12 md:mb-16 text-center">
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                        <span className="text-nppro-green font-black uppercase tracking-[0.5em] text-[9px] md:text-[10px]">
-                            Daily Selection
-                        </span>
+        <section className="bg-[#070707] py-20 md:py-28">
+            <div className="container mx-auto px-6">
+                <FadeIn className="mb-10 flex flex-col gap-4 md:mb-14 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter md:text-6xl">El menú de hoy</h2>
+                        <p className="mt-3 max-w-md text-white/55">Dos platos frescos por día. Los pedís hoy y te los llevamos.</p>
                     </div>
-                    <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-none uppercase">
-                        Nuestro <span className="text-white/20 italic">Menú</span> de hoy
-                    </h2>
-                </div>
+                    <Link to="/menu" className="text-sm font-bold text-nppro-green hover:underline">
+                        Ver el menú completo
+                    </Link>
+                </FadeIn>
 
-                <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-12 xl:gap-20">
-                    {specials.map(({ product, shift }, index) => {
-                        return (
-                            <div key={product.id} className="flex flex-col items-center text-center">
-                                
-                                {/* Imagen */}
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    className="relative group flex justify-center mb-6 md:mb-8 w-full max-w-[220px] md:max-w-[280px]"
-                                >
-                                    <div className="relative aspect-square w-full overflow-hidden rounded-full border border-white/5 shadow-2xl bg-gradient-to-b from-white/5 to-transparent">
-                                        <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-110"
-                                        />
-                                    </div>
-                                    {/* Decoración flotante sutil */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] bg-nppro-green/5 blur-3xl rounded-full -z-10" />
-                                </motion.div>
-
-                                {/* Información */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                                    className="flex flex-col items-center"
-                                >
-                                    <div className="inline-flex items-center gap-2 mb-3">
-                                        <span className="px-3 py-1 bg-nppro-green/10 text-nppro-green rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-nppro-green/20">
-                                            {shift}
-                                        </span>
-                                        <div className="flex items-center gap-1 text-nppro-green">
-                                            <Zap size={12} fill="currentColor" />
-                                            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Recomendado</span>
-                                        </div>
-                                    </div>
-
-                                    <h3 className="text-2xl md:text-3xl lg:text-4xl font-black italic mb-4 leading-tight uppercase tracking-tight text-white max-w-sm">
-                                        {product.name}
-                                    </h3>
-
-                                    <p className="text-nppro-gray text-sm md:text-base font-light leading-relaxed mb-6 max-w-sm">
-                                        {product.description}
-                                    </p>
-
-                                    {/* Macros compactos */}
+                {/* En celular se desliza de costado; en compu van en dos columnas */}
+                <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-8 md:overflow-visible md:px-0">
+                    {specials.map(({ product, shift }, i) => (
+                        <FadeIn
+                            key={product.id}
+                            delay={i * 0.12}
+                            className="w-[82%] shrink-0 snap-center md:w-auto"
+                        >
+                            <article className="flex h-full flex-col rounded-[2rem] border border-white/[0.06] bg-white/[0.03] p-5 md:flex-row md:items-center md:gap-6 md:p-6">
+                                <img
+                                    src={product.image}
+                                    alt={product.name}
+                                    loading="lazy"
+                                    decoding="async"
+                                    width={640}
+                                    height={640}
+                                    className="mx-auto aspect-square w-full max-w-[260px] object-contain md:w-48 md:max-w-none"
+                                />
+                                <div className="mt-4 flex flex-1 flex-col md:mt-0">
+                                    <span className="text-sm font-semibold text-nppro-green">{shift}</span>
+                                    <h3 className="mt-1 text-xl font-black uppercase italic leading-tight tracking-tight md:text-2xl">{product.name}</h3>
                                     {product.macros && (
-                                        <div className="flex gap-6 mb-8 pb-6 border-b border-white/5">
-                                            <div className="flex flex-col items-center">
-                                                <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-1 flex items-center gap-1">
-                                                    <Flame size={10} /> Energía
-                                                </span>
-                                                <span className="text-lg md:text-xl font-black italic text-white">{product.macros.kcal} kcal</span>
-                                            </div>
-                                            <div className="flex flex-col items-center">
-                                                <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-1 flex items-center gap-1">
-                                                    <BicepsFlexed size={10} /> Proteína
-                                                </span>
-                                                <span className="text-lg md:text-xl font-black italic text-white uppercase">{product.macros.protein}g</span>
-                                            </div>
-                                        </div>
+                                        <p className="mt-2 text-sm tabular-nums text-white/55">
+                                            {product.macros.protein} g de proteína, {product.macros.kcal} kcal
+                                        </p>
                                     )}
-
-                                    {/* Botón CTA */}
-                                    <div className="flex items-center gap-4">
+                                    <div className="mt-5 flex items-center justify-between gap-3">
+                                        <span className="text-2xl font-black tabular-nums">{formatPrice(product.price)}</span>
                                         <button
+                                            type="button"
                                             onClick={(e) => handleAddToCart(product, e)}
-                                            className="group relative px-6 md:px-8 py-3 bg-white text-black font-black italic rounded-full text-xs md:text-sm transition-all hover:bg-nppro-green hover:scale-105"
+                                            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-black transition-transform hover:scale-[1.03] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nppro-green"
                                         >
-                                            AGREGAR AL PEDIDO
+                                            <Plus size={16} strokeWidth={3} />
+                                            Agregar
                                         </button>
-                                        <span className="text-xl md:text-2xl font-black italic text-white/80">${product.price}</span>
                                     </div>
-                                </motion.div>
-
-                            </div>
-                        );
-                    })}
+                                </div>
+                            </article>
+                        </FadeIn>
+                    ))}
                 </div>
             </div>
         </section>
