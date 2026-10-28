@@ -1,329 +1,256 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Check, Send, Snowflake, Clock, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { MENU, CONFIG, PREMADE_PACKS } from '../data/data';
-import { ShoppingCart, ShieldCheck, Flame, Send, Sparkles, Truck, Zap, Snowflake, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
-import PremadePackCard from '../components/menu/PremadePackCard';
+import FadeIn from '../components/common/FadeIn';
+import { formatPrice } from '../utils/format';
+
+type Goal = 'mass' | 'lean';
+type Size = 5 | 10;
+
+const GOALS: Record<Goal, { label: string; text: string }> = {
+    mass: { label: 'Volumen', text: 'Porciones más grandes y más carbohidratos, para ganar masa muscular.' },
+    lean: { label: 'Definición', text: 'Menos calorías con la proteína alta, para bajar grasa sin perder músculo.' },
+};
+
+// Envío del pack (igual que en el carrito)
+const SHIPPING: Record<Size, number> = { 5: 3500, 10: 0 };
+// Precio de cada vianda fresca envasada al vacío, para calcular el ahorro
+const FRESH_PRICE = 10800 + CONFIG.vacuumExtraPrice;
+
+const packKey = (goal: Goal, size: Size) => `${goal}${size}`;
 
 const PackBuilder: React.FC = () => {
-    const {
-        cart,
-        addToCart,
-        clearCart,
-        subtotal,
-        shippingCost,
-        total,
-        selectedPremadePack,
-        setSelectedPremadePack
-    } = useCart();
+    const { addToCart, clearCart, selectedPremadePack, setSelectedPremadePack } = useCart();
 
-    // Precio base del pack seleccionado (desde PREMADE_PACKS, no de los ítems del carrito)
-    const packPrice = selectedPremadePack ? (PREMADE_PACKS[selectedPremadePack]?.price ?? 0) : null;
+    // Si ya había un pack elegido (por ejemplo, volviendo del carrito), lo retomamos
+    const initialGoal: Goal = selectedPremadePack?.startsWith('lean') ? 'lean' : 'mass';
+    const initialSize: Size | null = selectedPremadePack ? (selectedPremadePack.endsWith('10') ? 10 : 5) : null;
+    const [goal, setGoal] = useState<Goal>(initialGoal);
+    const [size, setSize] = useState<Size | null>(initialSize);
 
-    const packItems = cart.filter((item: any) => item.packEligible);
-
-    const handleAddPremadePack = (type: string) => {
-        clearCart();
-        const pack = PREMADE_PACKS[type];
+    const selectPack = (g: Goal, s: Size) => {
+        const key = packKey(g, s);
+        const pack = PREMADE_PACKS[key];
         if (!pack) return;
-
-        pack.items.forEach((item: { id: string, qty: number }) => {
+        clearCart();
+        (pack.items as { id: string; qty: number }[]).forEach(item => {
             const product = MENU.find(p => p.id === item.id);
-            if (product) {
-                for (let i = 0; i < item.qty; i++) {
-                    addToCart(product, { useVacuum: false });
-                }
-            }
+            if (!product) return;
+            for (let i = 0; i < item.qty; i++) addToCart(product, { useVacuum: false, variant: g });
         });
-        setSelectedPremadePack(type);
+        setSelectedPremadePack(key);
+        setGoal(g);
+        setSize(s);
     };
+
+    const changeGoal = (g: Goal) => {
+        if (size) selectPack(g, size);
+        else setGoal(g);
+    };
+
+    const pack = size ? PREMADE_PACKS[packKey(goal, size)] : null;
+    const shipping = size ? SHIPPING[size] : 0;
+    const total = pack ? pack.price + shipping : 0;
+
+    // Contenido del pack elegido (o del x10 como vista previa)
+    const previewItems = (PREMADE_PACKS[packKey(goal, size ?? 10)].items as { id: string; qty: number }[])
+        .map(it => ({ qty: it.qty, product: MENU.find(p => p.id === it.id) }))
+        .filter((it): it is { qty: number; product: NonNullable<typeof it.product> } => Boolean(it.product));
 
     const handleWhatsAppOrder = () => {
-        if (!selectedPremadePack) return;
-
-        const packName = packTitles[selectedPremadePack];
-        const platosStr = packItems.map(item => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ''}`).join(', ');
-        
-        const envioStr = shippingCost === 0 ? ' (envío gratis)' : ` (+ envío $${shippingCost.toLocaleString('es-AR')})`;
-        
-        const message = `Hola! Quiero el ${packName}.\nPlatos: ${platosStr}\nTotal: $${total.toLocaleString('es-AR')}${envioStr}\nEntrega: lunes / jueves`;
-
+        if (!pack || !size) return;
+        const platos = previewItems
+            .map(({ product, qty }) => `${product.name}${qty > 1 ? ` x${qty}` : ''}`)
+            .join(', ');
+        const envio = shipping === 0 ? ' (envío gratis)' : ` (incluye envío ${formatPrice(shipping)})`;
+        const message =
+            `Hola! Quiero el Pack Congelado x${size} - ${GOALS[goal].label}.\n` +
+            `Platos: ${platos}\n` +
+            `Total: ${formatPrice(total)}${envio}\n` +
+            `Entrega: lunes o martes`;
         const link = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-
-        const newWindow = window.open(link, '_blank');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-            window.location.href = link;
-        }
-    };
-
-    const scrollToSection = (id: string) => {
-        const element = document.getElementById(id);
-        if (element) {
-            const offset = 100;
-            const bodyRect = document.body.getBoundingClientRect().top;
-            const elementRect = element.getBoundingClientRect().top;
-            const elementPosition = elementRect - bodyRect;
-            const offsetPosition = elementPosition - offset;
-
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
-        }
-    };
-
-    const packTitles: Record<string, string> = {
-        'mass5': 'Pack Congelado x5',
-        'mass10': 'Pack Congelado x10',
-        'lean5': 'Pack Congelado x5',
-        'lean10': 'Pack Congelado x10',
+        const w = window.open(link, '_blank');
+        if (!w || w.closed || typeof w.closed === 'undefined') window.location.assign(link);
     };
 
     return (
-        <div className="pt-24 pb-24 min-h-screen bg-[#050505] text-white font-sans">
+        <div className="min-h-screen bg-[#0B0B0B] pb-40 pt-28 text-white lg:pb-24">
             <div className="container mx-auto px-6">
+                {/* Encabezado */}
+                <FadeIn className="max-w-2xl">
+                    <h1 className="text-5xl font-black uppercase italic leading-[0.95] tracking-tighter md:text-7xl">Packs congelados</h1>
+                    <p className="mt-5 text-white/60 md:text-lg">
+                        Elegí tu objetivo y el tamaño del pack. Lo pedís por WhatsApp y te llega listo para el freezer.
+                    </p>
+                    <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
+                        <li className="flex items-center gap-2"><Snowflake size={15} className="text-nppro-green" />Cocinado y congelado en el día</li>
+                        <li className="flex items-center gap-2"><Clock size={15} className="text-nppro-green" />Pedidos hasta el viernes</li>
+                        <li className="flex items-center gap-2"><Truck size={15} className="text-nppro-green" />Entrega lunes o martes</li>
+                    </ul>
+                </FadeIn>
 
-                {/* Header Principal */}
-                <header className="mb-10 border-b border-white/5 pb-10">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                        <div>
-                            <div className="flex items-center gap-2 text-nppro-green mb-4">
-                                <span className="h-px w-8 bg-nppro-green"></span>
-                                <span className="text-xs font-black uppercase tracking-[0.3em]">Performance Meal Prep</span>
-                            </div>
-                            <div className="flex items-end gap-4 flex-wrap">
-                                <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
-                                    Elegí tu <span className="text-nppro-green">Pack</span>
-                                </h1>
-                                <span className="mb-1 flex items-center gap-1.5 bg-white/10 border border-white/15 text-white text-[11px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-sm">
-                                    <Snowflake size={12} className="text-cyan-300" />
-                                    Congelados
-                                </span>
-                            </div>
-
-                            {/* Franja informativa */}
-                            <div className="mt-5 flex flex-wrap gap-3">
-                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
-                                    <Snowflake size={13} className="text-cyan-300 shrink-0" />
-                                    <span className="text-[11px] font-bold text-white/70">Cocinado y congelado en el día</span>
+                <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_360px] lg:gap-14">
+                    <div className="space-y-14">
+                        {/* Paso 1: objetivo */}
+                        <FadeIn>
+                            <section aria-labelledby="paso-objetivo">
+                                <h2 id="paso-objetivo" className="text-2xl font-black md:text-3xl">
+                                    <span className="mr-3 text-nppro-green">1</span>Tu objetivo
+                                </h2>
+                                <div className="mt-5 inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1" role="radiogroup" aria-label="Objetivo">
+                                    {(Object.keys(GOALS) as Goal[]).map(g => (
+                                        <button
+                                            key={g}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={goal === g}
+                                            onClick={() => changeGoal(g)}
+                                            className={`rounded-full px-7 py-3 text-sm font-black uppercase italic transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nppro-green ${goal === g ? 'bg-nppro-green text-black' : 'text-white/60 hover:text-white'}`}
+                                        >
+                                            {GOALS[g].label}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
-                                    <Truck size={13} className="text-nppro-green shrink-0" />
-                                    <span className="text-[11px] font-bold text-white/70">Se entregan lunes o martes</span>
+                                <p className="mt-4 max-w-md text-white/70">{GOALS[goal].text}</p>
+                            </section>
+                        </FadeIn>
+
+                        {/* Paso 2: tamaño */}
+                        <FadeIn>
+                            <section aria-labelledby="paso-tamano">
+                                <h2 id="paso-tamano" className="text-2xl font-black md:text-3xl">
+                                    <span className="mr-3 text-nppro-green">2</span>El tamaño
+                                </h2>
+                                <div className="mt-5 grid gap-4 sm:grid-cols-2" role="radiogroup" aria-label="Tamaño del pack">
+                                    {([5, 10] as Size[]).map(s => {
+                                        const p = PREMADE_PACKS[packKey(goal, s)];
+                                        const selected = size === s;
+                                        const savings = FRESH_PRICE * p.mealsCount - p.price;
+                                        return (
+                                            <button
+                                                key={s}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={selected}
+                                                onClick={() => selectPack(goal, s)}
+                                                className={`relative flex flex-col rounded-[2rem] border p-6 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nppro-green md:p-7 ${selected
+                                                    ? 'border-nppro-green bg-nppro-green/10'
+                                                    : 'border-white/10 bg-white/[0.03] hover:border-white/25'}`}
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <span className="text-2xl font-black uppercase italic tracking-tight">Pack x{s}</span>
+                                                    {s === 10 && (
+                                                        <span className="rounded-full bg-nppro-green px-3 py-1 text-xs font-bold text-black">El más elegido</span>
+                                                    )}
+                                                </div>
+                                                <span className="mt-6 text-5xl font-black tabular-nums tracking-tight">{formatPrice(p.price / p.mealsCount)}</span>
+                                                <span className="mt-1 text-sm text-white/50">por comida ({formatPrice(p.price)} el pack)</span>
+                                                <ul className="mt-5 space-y-1.5 text-sm">
+                                                    <li className="flex items-center gap-2">
+                                                        <Check size={15} strokeWidth={3} className="text-nppro-green" />
+                                                        {SHIPPING[s] === 0 ? 'Envío gratis en Trelew' : `Envío ${formatPrice(SHIPPING[s])}`}
+                                                    </li>
+                                                    <li className="flex items-center gap-2">
+                                                        <Check size={15} strokeWidth={3} className="text-nppro-green" />
+                                                        Ahorrás {formatPrice(savings)} contra la vianda fresca
+                                                    </li>
+                                                </ul>
+                                                <span className={`mt-6 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-black uppercase italic ${selected ? 'bg-nppro-green text-black' : 'bg-white text-black'}`}>
+                                                    {selected ? <><Check size={16} strokeWidth={3} /> Elegido</> : 'Elegir este pack'}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
-                                    <Clock size={13} className="text-white/50 shrink-0" />
-                                    <span className="text-[11px] font-bold text-white/70">Pedidos hasta el viernes</span>
-                                </div>
-                            </div>
-                        </div>
+                            </section>
+                        </FadeIn>
 
-                        {/* Quick Nav */}
-                        <div className="flex gap-3 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
-                            <button
-                                onClick={() => scrollToSection('lean-section')}
-                                className="px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 hover:bg-white/10 transition-colors text-white"
-                            >
-                                <Flame size={16} /> Definición
-                            </button>
-                            <button
-                                onClick={() => scrollToSection('mass-section')}
-                                className="px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 hover:bg-white/10 transition-colors text-nppro-green"
-                            >
-                                <Zap size={16} /> Volumen
-                            </button>
-                        </div>
-                    </div>
-                </header>
-
-                <div className="flex flex-col lg:flex-row gap-12">
-
-                    {/* SECCIÓN DE PACKS */}
-                    <div className="flex-1 space-y-20">
-
-                        {/* Fila Lean */}
-                        <div id="lean-section" className="scroll-mt-24">
-                            <div className="flex flex-col items-center justify-center text-center mb-10">
-                                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white mb-4 shadow-lg">
-                                    <Flame size={32} />
-                                </div>
-                                <h2 className="text-4xl font-black italic uppercase tracking-tighter">Objetivo: Definición</h2>
-                                <p className="text-white/40 text-xs font-bold uppercase tracking-[0.2em] mt-2">Déficit calórico • Retención muscular</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                <PremadePackCard
-                                    variant="lean"
-                                    type="lean5"
-                                    name="Pack Congelado x5"
-                                    description="Definición semanal"
-                                    price={52500}
-                                    pricePerUnit={10500}
-                                    onAdd={() => handleAddPremadePack('lean5')}
-                                    items={[
-                                        { name: "Pollo a la Naranja" },
-                                        { name: "Pollo con Salsa de Maní" },
-                                        { name: "Carne Oriental" },
-                                        { name: "Carne Desmenuzada Tex-Mex" },
-                                        { name: "Bondiola desmechada con puré de boniato" },
-                                    ]}
-                                />
-                                <PremadePackCard
-                                    variant="lean"
-                                    type="lean10"
-                                    name="Pack Congelado x10"
-                                    description="Plan semanal completo"
-                                    price={100000}
-                                    pricePerUnit={10000}
-                                    onAdd={() => handleAddPremadePack('lean10')}
-                                    isBestValue={true}
-                                    savings="$13.000"
-                                    freeShipping={true}
-                                    items={[
-                                        { name: "Pollo a la Naranja", qty: 2 },
-                                        { name: "Pollo con Salsa de Maní", qty: 2 },
-                                        { name: "Carne Oriental" },
-                                        { name: "Carne Desmenuzada Tex-Mex" },
-                                        { name: "Bondiola desmechada con puré de boniato" },
-                                        { name: "Cerdo Deshilado con Arroz y Glaseados" },
-                                        { name: "Bondiola al Pomelo" },
-                                        { name: "NPPRO Rice" },
-                                    ]}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Divisor Visual */}
-                        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-                        {/* Fila Mass */}
-                        <div id="mass-section" className="scroll-mt-24">
-                            <div className="flex flex-col items-center justify-center text-center mb-10">
-                                <div className="w-16 h-16 rounded-full bg-nppro-green/10 border border-nppro-green/20 flex items-center justify-center text-nppro-green mb-4 shadow-[0_0_30px_rgba(22,163,74,0.2)]">
-                                    <Zap size={32} />
-                                </div>
-                                <h2 className="text-4xl font-black italic uppercase tracking-tighter">Objetivo: Volumen</h2>
-                                <p className="text-nppro-green/60 text-xs font-bold uppercase tracking-[0.2em] mt-2">Superávit calórico • Fuerza</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                <PremadePackCard
-                                    variant="mass"
-                                    type="mass5"
-                                    name="Pack Congelado x5"
-                                    description="Volumen semanal"
-                                    price={52500}
-                                    pricePerUnit={10500}
-                                    onAdd={() => handleAddPremadePack('mass5')}
-                                    items={[
-                                        { name: "Pollo a la Naranja" },
-                                        { name: "Pollo con Salsa de Maní" },
-                                        { name: "Carne Oriental" },
-                                        { name: "Carne Desmenuzada Tex-Mex" },
-                                        { name: "Bondiola desmechada con puré de boniato" },
-                                    ]}
-                                />
-                                <PremadePackCard
-                                    variant="mass"
-                                    type="mass10"
-                                    name="Pack Congelado x10"
-                                    description="Alta densidad semanal"
-                                    price={100000}
-                                    pricePerUnit={10000}
-                                    onAdd={() => handleAddPremadePack('mass10')}
-                                    isBestValue={true}
-                                    savings="$13.000"
-                                    freeShipping={true}
-                                    items={[
-                                        { name: "Pollo a la Naranja", qty: 2 },
-                                        { name: "Pollo con Salsa de Maní", qty: 2 },
-                                        { name: "Carne Oriental" },
-                                        { name: "Carne Desmenuzada Tex-Mex" },
-                                        { name: "Bondiola desmechada con puré de boniato" },
-                                        { name: "Cerdo Deshilado con Arroz y Glaseados" },
-                                        { name: "Bondiola al Pomelo" },
-                                        { name: "NPPRO Rice" },
-                                    ]}
-                                />
-                            </div>
-                        </div>
+                        {/* Qué trae */}
+                        <FadeIn>
+                            <section aria-labelledby="que-trae">
+                                <h2 id="que-trae" className="text-2xl font-black md:text-3xl">
+                                    Qué trae el pack x{size ?? 10}
+                                </h2>
+                                <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                                    {previewItems.map(({ product, qty }) => {
+                                        const m = goal === 'lean' ? (product.macrosLean ?? product.macros) : product.macros;
+                                        return (
+                                            <li key={product.id} className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3 pr-4">
+                                                {product.image ? (
+                                                    <img src={product.image} alt="" loading="lazy" decoding="async" width={640} height={640} className="h-16 w-16 shrink-0 object-contain" />
+                                                ) : (
+                                                    <span className="h-16 w-16 shrink-0 rounded-full bg-white/5" aria-hidden="true" />
+                                                )}
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-bold leading-tight">{product.name}</p>
+                                                    {m && <p className="mt-1 text-sm tabular-nums text-white/50">{m.protein} g de proteína, {m.kcal} kcal</p>}
+                                                </div>
+                                                {qty > 1 && <span className="shrink-0 text-lg font-black text-nppro-green">x{qty}</span>}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </section>
+                        </FadeIn>
                     </div>
 
-                    {/* Checkout Sidebar */}
-                    <aside className="lg:w-[400px]">
-                        <div className="sticky top-28 bg-[#0D0D0D] border border-white/10 rounded-[40px] p-8 shadow-2xl">
-                            <h2 className="text-xl font-black mb-8 italic uppercase flex items-center gap-2">
-                                <ShoppingCart size={20} className="text-nppro-green" /> Tu Selección
-                            </h2>
-
-                            {selectedPremadePack ? (
-                                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mb-8 p-6 rounded-3xl bg-nppro-green text-black relative overflow-hidden shadow-[0_0_30px_rgba(22,163,74,0.2)]">
-                                    <Sparkles size={80} className="absolute -right-6 -top-6 opacity-10" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Pack Listo</span>
-                                    <h3 className="text-3xl font-black italic uppercase leading-none mt-1">
-                                        {packTitles[selectedPremadePack]}
-                                    </h3>
-                                    <p className="text-xs font-bold mt-4 flex items-center gap-1 bg-black/10 w-fit px-3 py-1.5 rounded-full">
-                                        <ShieldCheck size={14} /> PACK CONGELADO
-                                    </p>
-                                </motion.div>
+                    {/* Resumen: columna en compu */}
+                    <aside className="hidden lg:block">
+                        <div className="sticky top-28 rounded-[2rem] border border-white/10 bg-white/[0.03] p-7">
+                            <h2 className="text-xl font-black">Tu pedido</h2>
+                            {pack && size ? (
+                                <>
+                                    <p className="mt-4 text-2xl font-black uppercase italic leading-tight">Pack x{size} {GOALS[goal].label}</p>
+                                    <dl className="mt-6 space-y-3 text-sm">
+                                        <div className="flex justify-between"><dt className="text-white/55">Pack</dt><dd className="tabular-nums">{formatPrice(pack.price)}</dd></div>
+                                        <div className="flex justify-between">
+                                            <dt className="text-white/55">Envío</dt>
+                                            <dd className={shipping === 0 ? 'font-bold text-nppro-green' : 'tabular-nums'}>{shipping === 0 ? 'Gratis' : formatPrice(shipping)}</dd>
+                                        </div>
+                                        <div className="flex items-baseline justify-between border-t border-white/10 pt-4">
+                                            <dt className="font-bold">Total</dt>
+                                            <dd className="text-4xl font-black tabular-nums tracking-tight">{formatPrice(total)}</dd>
+                                        </div>
+                                    </dl>
+                                </>
                             ) : (
-                                <div className="mb-8 p-8 rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02]">
-                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-                                        <ShoppingCart size={24} className="text-white/20" />
-                                    </div>
-                                    <p className="text-xs text-white/40 uppercase font-bold tracking-widest leading-relaxed">
-                                        Seleccioná un pack <br /> para comenzar
-                                    </p>
-                                </div>
+                                <p className="mt-4 text-white/50">Elegí un tamaño de pack para ver el total.</p>
                             )}
-
-                            <div className="space-y-4 mb-8">
-                                {selectedPremadePack && packPrice !== null ? (
-                                    // ── Modo pack: muestra precio fijo del pack + envío
-                                    <>
-                                        <div className="flex justify-between text-[10px] font-bold uppercase text-white/40">
-                                            <span>Precio pack</span>
-                                            <span className="font-mono text-white">${packPrice.toLocaleString('es-AR')}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[10px] items-center">
-                                            {shippingCost === 0 ? (
-                                                <>
-                                                    <span className="text-nppro-green font-bold uppercase flex items-center gap-2"><Truck size={14} /> Envío</span>
-                                                    <span className="text-nppro-green font-black bg-nppro-green/10 border border-nppro-green/20 px-3 py-1 rounded-xl">GRATIS</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className="text-white/40 font-bold uppercase flex items-center gap-2"><Truck size={14} /> Envío</span>
-                                                    <span className="font-mono text-white">${shippingCost.toLocaleString('es-AR')}</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </>
-                                ) : (
-                                    // ── Modo suelto: muestra subtotal
-                                    <div className="flex justify-between text-[10px] font-bold uppercase text-white/40">
-                                        <span>Subtotal</span>
-                                        <span className="font-mono text-white">${subtotal.toLocaleString('es-AR')}</span>
-                                    </div>
-                                )}
-                                <div className="pt-6 border-t border-white/10 flex justify-between items-end">
-                                    <span className="font-black uppercase italic text-lg text-white">Total</span>
-                                    <span className="text-5xl font-black text-white tracking-tighter">
-                                        ${total.toLocaleString('es-AR')}
-                                    </span>
-                                </div>
-                            </div>
-
                             <button
+                                type="button"
                                 onClick={handleWhatsAppOrder}
-                                disabled={!selectedPremadePack}
-                                className="w-full bg-nppro-green text-black py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-xl"
+                                disabled={!pack}
+                                className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-nppro-green py-4 text-sm font-black uppercase italic text-black transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:hover:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nppro-green"
                             >
-                                <Send size={18} /> Coordinar Pedido
+                                <Send size={17} /> Pedir por WhatsApp
                             </button>
                         </div>
                     </aside>
+                </div>
+            </div>
+
+            {/* Resumen: barra fija en celular */}
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0B0B0B] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 lg:hidden">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                        {pack && size ? (
+                            <>
+                                <p className="truncate text-sm text-white/60">Pack x{size} {GOALS[goal].label}{shipping === 0 ? ', envío gratis' : ''}</p>
+                                <p className="text-2xl font-black tabular-nums">{formatPrice(total)}</p>
+                            </>
+                        ) : (
+                            <p className="text-sm text-white/60">Elegí un tamaño de pack</p>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleWhatsAppOrder}
+                        disabled={!pack}
+                        className="flex shrink-0 items-center gap-2 rounded-full bg-nppro-green px-6 py-3.5 text-sm font-black uppercase italic text-black disabled:opacity-40"
+                    >
+                        <Send size={16} /> Pedir
+                    </button>
                 </div>
             </div>
         </div>

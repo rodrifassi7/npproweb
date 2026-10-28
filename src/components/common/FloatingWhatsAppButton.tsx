@@ -1,13 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 const FloatingWhatsAppButton: React.FC = () => {
+    const { pathname } = useLocation();
+    // En packs y checkout ya hay un botón para pedir por WhatsApp
+    if (pathname === '/packs' || pathname === '/checkout') return null;
     return (
         <motion.a
             href="https://wa.me/5492804385269"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Chat on WhatsApp"
+            aria-label="Escribinos por WhatsApp"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.1 }}

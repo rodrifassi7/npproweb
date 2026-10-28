@@ -68,16 +68,9 @@ const MacrosCalculator: React.FC = () => {
     );
 
     return (
-        <section className="py-24 bg-[#050505] relative overflow-hidden">
+        <section className="relative overflow-hidden bg-[#0B0B0B] pb-16 md:pb-24">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="max-w-5xl mx-auto">
-
-                    <div className="mb-12 text-center md:text-left">
-                        <span className="text-nppro-green font-black uppercase tracking-[0.4em] text-[10px] mb-2 block">Herramienta Gratuita</span>
-                        <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase text-white">
-                            Calculadora <span className="text-white/30">de Macros</span>
-                        </h2>
-                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 

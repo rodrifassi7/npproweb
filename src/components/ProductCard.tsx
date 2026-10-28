@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Info, Zap } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -10,104 +10,81 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
     const { addToCart } = useCart();
-
     const buttonRef = React.useRef<HTMLButtonElement>(null);
 
     const handleAddToCart = () => {
         addToCart(product, { useVacuum: false });
         if (buttonRef.current) {
             import('../utils/flyToCart').then(({ flyToCart }) => {
-                flyToCart(
-                    buttonRef.current!,
-                    '#cart-icon-desktop',
-                    '#cart-icon-mobile',
-                    product.image
-                );
+                flyToCart(buttonRef.current!, '#cart-icon-desktop', '#cart-icon-mobile', product.image);
             });
         }
     };
 
+    const m = product.macros;
+
     return (
-        <div
-            className="glass rounded-3xl overflow-hidden group flex flex-col h-full border border-white/5"
-        >
-            {/* Contenedor de Imagen: Ajustado para platos redondos */}
-            <div className="relative aspect-square p-6 flex items-center justify-center overflow-hidden">
-                {/* Fondo decorativo detrás del plato */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent" />
+        <article className="group relative flex h-full gap-4 rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-4 transition-colors hover:border-white/15 sm:flex-col sm:gap-0 sm:p-5">
+            {/* Toda la tarjeta abre el detalle; el botón + agrega directo */}
+            <button
+                type="button"
+                onClick={() => onViewDetail?.(product)}
+                className="absolute inset-0 z-0 rounded-[1.75rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nppro-green"
+                aria-label={`Ver detalle de ${product.name}`}
+            />
 
-                <img
-                    src={product.image}
-                    alt={product.name}
-                    loading="lazy"
-                    decoding="async"
-                    width={640}
-                    height={640}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-
-                {/* Badges: Reposicionados para no tapar el plato */}
-                <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 z-10">
-                    {product.isDailySpecial && (
-                        <span className="bg-nppro-green text-black text-[9px] font-black uppercase px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                            <Zap size={10} fill="currentColor" /> Menú
-                        </span>
-                    )}
-
-
-                </div>
+            <div className="pointer-events-none relative w-28 shrink-0 self-center sm:mx-auto sm:w-full sm:max-w-[260px]">
+                {product.image ? (
+                    <img
+                        src={product.image}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        width={640}
+                        height={640}
+                        className="aspect-square w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
+                    />
+                ) : (
+                    <div className="aspect-square w-full rounded-full bg-white/5" />
+                )}
+                {product.isDailySpecial && (
+                    <span className="absolute left-0 top-0 rounded-full bg-nppro-green px-2.5 py-1 text-[11px] font-bold text-black">Hoy</span>
+                )}
             </div>
 
-            <div className="p-6 pt-0 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold group-hover:text-nppro-green transition-colors leading-tight uppercase italic tracking-tight">
-                        {product.name}
-                    </h3>
-                </div>
+            <div className="pointer-events-none relative flex min-w-0 flex-1 flex-col sm:mt-4">
+                <h3 className="text-base font-black uppercase italic leading-tight tracking-tight sm:text-lg">{product.name}</h3>
+                <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-white/50">{product.description}</p>
 
-                <p className="text-nppro-gray text-xs line-clamp-2 mb-6 flex-1">
-                    {product.description}
-                </p>
-
-                <div className="flex items-center justify-between gap-4 mt-auto">
-                    <div className="flex flex-col">
-                        {/* Removed Price Display */}
-                        {/* <span className="text-[10px] text-white/30 uppercase font-bold">Precio</span>
-                        <span className="text-xl font-black text-white italic">${product.price}</span> */}
-
-                        {/* Show Macros if available */}
-                        {product.macros && (
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-white/40 uppercase font-bold">Macros / Porción</span>
-                                <div className="flex items-center gap-3 text-[10px] font-bold text-nppro-gray">
-                                    <span className="flex items-center gap-1"><Zap size={10} className="text-nppro-green" /> {product.macros.kcal} kcal</span>
-                                    <span>P: {product.macros.protein}g</span>
-                                    <span>C: {product.macros.carbs}g</span>
-                                    <span>G: {product.macros.fat}g</span>
-                                </div>
+                <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                    {m ? (
+                        <dl className="flex gap-4 tabular-nums">
+                            <div>
+                                <dt className="text-[11px] text-white/40">Proteína</dt>
+                                <dd className="font-black text-nppro-green">{m.protein} g</dd>
                             </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={() => onViewDetail?.(product)}
-                            className="h-12 px-4 rounded-2xl bg-white/5 flex items-center justify-center gap-2 hover:bg-white/10 transition-colors text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-wider"
-                            title="Ver detalles"
-                        >
-                            <Info size={16} /> Más info
-                        </button>
-                        <button
-                            ref={buttonRef}
-                            onClick={handleAddToCart}
-                            className="w-12 h-12 bg-nppro-green rounded-2xl flex items-center justify-center hover:brightness-110 active:scale-95 transition-all text-black shadow-[0_0_20px_rgba(0,255,157,0.2)]"
-                        >
-                            <Plus size={24} strokeWidth={3} />
-                        </button>
-                    </div>
+                            <div>
+                                <dt className="text-[11px] text-white/40">Calorías</dt>
+                                <dd className="font-black">{m.kcal}</dd>
+                            </div>
+                            <div className="hidden min-[400px]:block">
+                                <dt className="text-[11px] text-white/40">Carbos</dt>
+                                <dd className="font-black">{m.carbs} g</dd>
+                            </div>
+                        </dl>
+                    ) : <span />}
+                    <button
+                        ref={buttonRef}
+                        type="button"
+                        onClick={handleAddToCart}
+                        aria-label={`Agregar ${product.name} al pedido`}
+                        className="pointer-events-auto relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-nppro-green text-black transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    >
+                        <Plus size={22} strokeWidth={3} />
+                    </button>
                 </div>
             </div>
-        </div>
+        </article>
     );
 };
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Clock, Flame, Check, Copy, Zap, ArrowRight, MessageSquare, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CONFIG } from '../data/data';
+import heroPlate from '../assets/pollomani.webp';
 
 const GymLandingV3WhatsApp: React.FC = () => {
     const [copied, setCopied] = useState(false);
@@ -56,13 +57,13 @@ const GymLandingV3WhatsApp: React.FC = () => {
                             transition={{ delay: 0.2 }}
                             className="md:w-1/2 relative z-10"
                         >
-                            <div className="w-full h-56 md:h-96 bg-gray-800 rounded-3xl flex items-center justify-center border-4 md:border-8 border-gray-900 shadow-inner overflow-hidden">
-                                <img
-                                    src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop"
-                                    alt="Vianda NPPRO premium"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
+                            <img
+                                src={heroPlate}
+                                alt="Pollo con salsa de maní de NPPRO"
+                                width={640}
+                                height={640}
+                                className="mx-auto aspect-square w-full max-w-[420px] object-contain"
+                            />
                         </motion.div>
                     </div>
                 </div>

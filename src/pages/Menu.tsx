@@ -18,7 +18,7 @@ const Menu: React.FC = () => {
     });
 
     return (
-        <div className="pt-32 pb-24 min-h-screen bg-[#050505]">
+        <div className="min-h-screen bg-[#0B0B0B] pb-24 pt-28">
             <div className="container mx-auto px-6">
                 <MenuHeader />
 
