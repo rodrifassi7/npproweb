@@ -2,7 +2,7 @@ import type { AppConfig, Product } from '../types';
 
 import bondiolaConPureImg from '../assets/bondiolaconpure.webp';
 import carneAsadaImg from '../assets/carneasada.webp';
-import carneOrientalImg from '../assets/carneoriental.png';
+import carneOrientalImg from '../assets/carneoriental.webp';
 import lemonChickenImg from '../assets/lemonchicken.webp';
 import npProRiceImg from '../assets/npprorice.webp';
 import bulkWrapImg from '../assets/bulkwrap.webp';

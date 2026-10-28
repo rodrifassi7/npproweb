@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
         <footer className="relative bg-[#050505] pt-24 pb-8 overflow-hidden">
             {/* Luces de ambiente sutiles */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-nppro-green/50 to-transparent" />
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-nppro-green/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.08),transparent)] pointer-events-none" />
 
             {/* Ticker de Marca Infinito (Opcional, da un toque muy pro) */}
             <div className="absolute top-10 flex whitespace-nowrap opacity-[0.03] select-none pointer-events-none border-y border-white py-4 overflow-hidden">

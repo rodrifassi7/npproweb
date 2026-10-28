@@ -30,7 +30,7 @@ const FeaturesSection: React.FC = () => {
     return (
         <section className="py-32 bg-[#0B0B0B] relative overflow-hidden">
             {/* Elemento decorativo de fondo */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-nppro-green/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] rounded-full bg-[radial-gradient(closest-side,rgba(22,163,74,0.08),transparent)] pointer-events-none" />
 
             <div className="container mx-auto px-6 relative z-10">
                 {/* Header dinámico */}

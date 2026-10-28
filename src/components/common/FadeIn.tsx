@@ -1,5 +1,4 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface FadeInProps {
     children: React.ReactNode;
@@ -8,39 +7,49 @@ interface FadeInProps {
     className?: string;
 }
 
-const FadeIn: React.FC<FadeInProps> = ({
-    children,
-    delay = 0,
-    direction = 'up',
-    className = ''
-}) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: '-80px' });
+const OFFSET: Record<NonNullable<FadeInProps['direction']>, string> = {
+    up: 'translateY(28px)',
+    down: 'translateY(-28px)',
+    left: 'translateX(-28px)',
+    right: 'translateX(28px)',
+    none: 'none',
+};
 
-    const variants = {
-        hidden: {
-            opacity: 0,
-            x: direction === 'left' ? -30 : direction === 'right' ? 30 : 0,
-            y: direction === 'up' ? 30 : direction === 'down' ? -30 : 0,
-        },
-        visible: {
-            opacity: 1,
-            x: 0,
-            y: 0,
-        }
-    };
+/**
+ * Aparece cuando entra en pantalla. Usa CSS + IntersectionObserver
+ * (sin librerías de animación), así no carga el celular.
+ */
+const FadeIn: React.FC<FadeInProps> = ({ children, delay = 0, direction = 'up', className = '' }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const io = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setVisible(true);
+                    io.disconnect();
+                }
+            },
+            { rootMargin: '0px 0px -60px 0px' }
+        );
+        io.observe(el);
+        return () => io.disconnect();
+    }, []);
 
     return (
-        <motion.div
+        <div
             ref={ref}
-            variants={variants}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-            transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
-            className={className}
+            className={`reveal ${visible ? 'is-visible' : ''} ${className}`}
+            style={{
+                '--reveal-delay': `${Math.round(delay * 1000)}ms`,
+                transform: visible ? undefined : OFFSET[direction],
+            } as React.CSSProperties}
         >
             {children}
-        </motion.div>
+        </div>
     );
 };
 

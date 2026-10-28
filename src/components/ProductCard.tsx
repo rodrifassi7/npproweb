@@ -2,7 +2,6 @@ import React from 'react';
 import { Plus, Info, Zap } from 'lucide-react';
 import type { Product } from '../types';
 import { useCart } from '../context/CartContext';
-import { motion } from 'framer-motion';
 
 interface ProductCardProps {
     product: Product;
@@ -29,10 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+        <div
             className="glass rounded-3xl overflow-hidden group flex flex-col h-full border border-white/5"
         >
             {/* Contenedor de Imagen: Ajustado para platos redondos */}
@@ -43,7 +39,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
                 <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-700 ease-out"
+                    loading="lazy"
+                    decoding="async"
+                    width={640}
+                    height={640}
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
 
                 {/* Badges: Reposicionados para no tapar el plato */}
@@ -107,7 +107,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetail }) => {
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

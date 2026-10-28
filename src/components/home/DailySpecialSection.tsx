@@ -64,6 +64,8 @@ const DailySpecialSection: React.FC<DailySpecialSectionProps> = ({ dailySpecials
                                         <img
                                             src={product.image}
                                             alt={product.name}
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-110"
                                         />
                                     </div>

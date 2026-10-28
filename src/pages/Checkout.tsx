@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { CONFIG } from '../data/data';
 import { MapPin, Truck, Store, MessageCircle, AlertCircle, Trash2, ShoppingCart, Ticket, Loader2, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+const getSupabase = () => import('../lib/supabase').then(m => m.supabase);
 
 const Checkout: React.FC = () => {
     const { cart, subtotal, packDiscount, total, vacuumTotal, removeFromCart, currentDiscountTier } = useCart();
@@ -38,6 +38,7 @@ const Checkout: React.FC = () => {
 
         try {
             // RPC call to validate_coupon
+            const supabase = await getSupabase();
             const { data, error } = await supabase.rpc('validate_coupon', {
                 input_code: couponCode,
                 input_phone: formData.phone || null
@@ -108,6 +109,7 @@ WEB ORDER DETALLES:
                 discount_percent: appliedCoupon?.percent || 0,
             };
 
+            const supabase = await getSupabase();
             const { error } = await supabase.from('orders').insert([orderData]);
 
             if (error) {

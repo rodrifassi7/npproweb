@@ -23,7 +23,6 @@ body {
 /* Custom Utilities */
 @utility glass {
   background-color: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -89,4 +88,79 @@ body {
 .cart-animate {
   animation: cart-pulse 300ms ease-out;
 }
-
+
+
+/* ---------- Movimiento ---------- */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.page-enter { animation: page-enter 0.35s ease-out both; }
+
+/* Aparición al hacer scroll (la activa <Reveal/> con IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- Hero ---------- */
+.hero { --hero-p: 0; }
+.hero-glow {
+  background:
+    radial-gradient(42% 46% at 72% 52%, rgba(22, 163, 74, 0.16), transparent 70%),
+    radial-gradient(30% 30% at 15% 20%, rgba(255, 255, 255, 0.035), transparent 70%);
+}
+@media (max-width: 767px) {
+  .hero-glow { background: radial-gradient(70% 38% at 50% 72%, rgba(22, 163, 74, 0.16), transparent 70%); }
+}
+
+/* Entrada de la portada: los tres verbos, uno detrás del otro */
+@keyframes hero-line-in {
+  from { opacity: 0; transform: translateY(0.35em) skewY(4deg); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.hero-line { animation: hero-line-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0ms); }
+.hero-fade { animation: hero-fade-in 0.6s ease-out both; animation-delay: var(--d, 0ms); }
+
+/* El texto se va al bajar */
+.hero-copy {
+  transform: translateY(calc(var(--hero-p) * 60px));
+  opacity: calc(1 - var(--hero-p) * 1.4);
+}
+
+/* Plato: entra girando, al bajar sigue girando y se aleja */
+@keyframes hero-plate-in {
+  from { opacity: 0; transform: scale(0.82) rotate(-35deg); }
+  to { opacity: 1; transform: none; }
+}
+.hero-plate {
+  animation: hero-plate-in 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+}
+.hero-plate > .hero-dish {
+  opacity: 0;
+  transform: rotate(calc(-50deg + var(--hero-p) * 140deg)) scale(calc(0.92 - var(--hero-p) * 0.12));
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+}
+.hero-plate > .hero-dish.is-active {
+  opacity: 1;
+  transform: rotate(calc(var(--hero-p) * 140deg)) scale(calc(1 - var(--hero-p) * 0.12));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-line, .hero-fade, .hero-plate { animation: none; }
+  .hero-copy { transform: none; opacity: 1; }
+  .hero-plate > .hero-dish, .hero-plate > .hero-dish.is-active { transition: opacity 0.3s ease; transform: none; }
+}
