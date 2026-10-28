@@ -3,10 +3,18 @@ import type { AppConfig, Product } from '../types';
 import bondiolaConPureImg from '../assets/bondiolaconpure.webp';
 import carneAsadaImg from '../assets/carneasada.webp';
 import carneOrientalImg from '../assets/carneoriental.png';
-import cerdoConColImg from '../assets/cerdoconcol.webp';
 import lemonChickenImg from '../assets/lemonchicken.webp';
 import npProRiceImg from '../assets/npprorice.webp';
 import bulkWrapImg from '../assets/bulkwrap.webp';
+import polloNaranjaImg from '../assets/pollonaranja.webp';
+import bondiolaPomeloImg from '../assets/bondiolapomelo.webp';
+import polloTikkaImg from '../assets/pollotikka.webp';
+import carneTexMexImg from '../assets/carnetexmex.webp';
+import polloDeshiladoImg from '../assets/pollodeshilado.webp';
+import hamburguesaImg from '../assets/hamburguesa.webp';
+import polloManiImg from '../assets/pollomani.webp';
+import polloPicanteImg from '../assets/pollopicante.webp';
+import cerdoGlaseadoImg from '../assets/cerdoglaseado.webp';
 
 export const CONFIG: AppConfig = {
     ACCENT_COLOR: '#16A34A',
@@ -140,16 +148,16 @@ export const MENU: Product[] = [
     },
     {
         id: 'm6',
-        name: 'Cerdo con batata',
+        name: 'Cerdo glaseado con batata y chauchas',
         category: 'vianda',
-        description: 'Lomo de cerdo desmechado con puré de batata y repollo salteado.',
+        description: 'Cerdo glaseado con mostaza, miel y limón, con batata asada en cubos y chauchas.',
         price: 10800,
-        image: cerdoConColImg,
+        image: cerdoGlaseadoImg,
         isDailySpecial: isSpecialToday('m6'),
         packEligible: true,
         vacuumAvailable: true,
-        macros: { kcal: 670, protein: 48, carbs: 70, fat: 20 },
-        macrosLean: { kcal: 490, protein: 46, carbs: 48, fat: 14 },
+        macros: { kcal: 580, protein: 47, carbs: 49, fat: 21 },
+        macrosLean: { kcal: 460, protein: 40, carbs: 38, fat: 17 },
         ingredients: [],
         tags: ['Cena'],
     },
@@ -175,7 +183,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Pollo con arroz, zanahoria y chauchas en salsa de naranja, miel y soja, con sésamo.',
         price: 10800,
-        image: undefined,
+        image: polloNaranjaImg,
         isDailySpecial: isSpecialToday('m8'),
         packEligible: true,
         vacuumAvailable: true,
@@ -192,7 +200,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Bondiola braseada lento en glaseado de pomelo, miel y mostaza, con arroz y zapallitos.',
         price: 10800,
-        image: undefined,
+        image: bondiolaPomeloImg,
         isDailySpecial: isSpecialToday('m9'),
         packEligible: true,
         vacuumAvailable: true,
@@ -207,7 +215,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Pollo marinado en yogur y especias indias, en salsa cremosa de curry con arroz y vegetales.',
         price: 10800,
-        image: undefined,
+        image: polloTikkaImg,
         isDailySpecial: isSpecialToday('m10'),
         packEligible: true,
         vacuumAvailable: true,
@@ -239,7 +247,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Carne braseada con especias tex-mex, arroz, porotos negros, choclo y tomate asado.',
         price: 10800,
-        image: undefined,
+        image: carneTexMexImg,
         isDailySpecial: false,
         packEligible: true,
         vacuumAvailable: true,
@@ -254,7 +262,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Pollo deshilado al limón y cilantro, con arroz, vegetales y sésamo.',
         price: 10800,
-        image: undefined,
+        image: polloDeshiladoImg,
         isDailySpecial: false,
         packEligible: true,
         vacuumAvailable: true,
@@ -269,7 +277,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Hamburguesa de carne con batata y vegetales asados. Salsa de yogur y mostaza aparte.',
         price: 10800,
-        image: undefined,
+        image: hamburguesaImg,
         isDailySpecial: false,
         packEligible: true,
         vacuumAvailable: true,
@@ -284,7 +292,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Pollo con arroz y vegetales salteados. Dip de maní, soja y miel aparte.',
         price: 10800,
-        image: undefined,
+        image: polloManiImg,
         isDailySpecial: false,
         packEligible: true,
         vacuumAvailable: true,
@@ -299,7 +307,7 @@ export const MENU: Product[] = [
         category: 'vianda',
         description: 'Pollo al pimentón picante con batata y zapallitos asados. Dip de yogur y pepino aparte.',
         price: 10800,
-        image: undefined,
+        image: polloPicanteImg,
         isDailySpecial: false,
         packEligible: true,
         vacuumAvailable: true,
