@@ -38,7 +38,7 @@ export type WeekKey = 'A' | 'B';
  * 2 platos por día: [almuerzo, cena]
  *
  * m1 NPPRO Rice · m2 Carne Oriental · m3 Lemon Chicken · m4 Bondiola con puré de boniato
- * m5 Carne Asada · m6 Cerdo glaseado con batata · m7 Bulk Wrap · m8 Pollo a la Naranja
+ * m5 Carne Asada · m6 Cerdo glaseado con batata · m7 Pork Wrap · m8 Pollo a la Naranja
  * m9 Bondiola al Pomelo · m10 Pollo Tikka · m11 Cerdo Deshilado · m12 Carne Tex-Mex
  * m13 Pollo Deshilado · m14 Hamburguesa Casera · m15 Pollo con Salsa de Maní · m16 Pollo Picante
  */
@@ -47,7 +47,7 @@ export const BIWEEKLY_MENU_IDS: Record<WeekKey, Record<DayKey, [string, string]>
         LUN: ['m10', 'm5'],  // Pollo Tikka · Carne Asada
         MAR: ['m12', 'm3'],  // Carne Desmenuzada Tex-Mex · Lemon Chicken
         MIE: ['m8', 'm4'],   // Pollo a la Naranja · Bondiola con puré de boniato
-        JUE: ['m16', 'm7'],  // Pollo Picante con Dip de Yogur · Bulk Wrap
+        JUE: ['m16', 'm7'],  // Pollo Picante con Dip de Yogur · Pork Wrap
         VIE: ['m15', 'm9'],  // Pollo con Salsa de Maní · Bondiola al Pomelo
     },
     B: {
@@ -208,7 +208,7 @@ export const MENU: Product[] = [
     // ✅ Jueves
     {
         id: 'm7',
-        name: 'Bulk Wrap',
+        name: 'Pork Wrap',
         category: 'wrap',
         description: 'Cerdo desmenuzado, arroz, alioli de pimentón, lechuga, cebolla morada y morrón.',
         price: 10800,
@@ -361,63 +361,26 @@ export const MENU: Product[] = [
     },
 ];
 
-export const PREMADE_PACKS: Record<string, any> = {
-    // x5 — misma composición para Lean y Mass
-    lean5: {
-        name: 'Pack Congelado x5',
-        mealsCount: 5,
-        price: 52500,
-        items: [
-            { id: 'm8',  qty: 1, customName: 'Pollo a la Naranja' },
-            { id: 'm15', qty: 1, customName: 'Pollo con Salsa de Maní' },
-            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
-            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
-            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
-        ]
-    },
-    mass5: {
-        name: 'Pack Congelado x5',
-        mealsCount: 5,
-        price: 52500,
-        items: [
-            { id: 'm8',  qty: 1, customName: 'Pollo a la Naranja' },
-            { id: 'm15', qty: 1, customName: 'Pollo con Salsa de Maní' },
-            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
-            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
-            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
-        ]
-    },
-    // x10 — misma composición para Lean y Mass
-    lean10: {
-        name: 'Pack Congelado x10',
-        mealsCount: 10,
-        isMostPopular: true,
-        price: 100000,
-        items: [
-            { id: 'm8',  qty: 2, customName: 'Pollo a la Naranja' },
-            { id: 'm15', qty: 2, customName: 'Pollo con Salsa de Maní' },
-            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
-            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
-            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
-            { id: 'm11', qty: 1, customName: 'Cerdo Deshilado con Arroz y Glaseados' },
-            { id: 'm9',  qty: 1, customName: 'Bondiola al Pomelo' },
-            { id: 'm1',  qty: 1, customName: 'NPPRO Rice' },
-        ]
-    },
-    mass10: {
-        name: 'Pack Congelado x10',
-        mealsCount: 10,
-        isMostPopular: true,
-        price: 100000,
-        items: [
-            { id: 'm8',  qty: 2, customName: 'Pollo a la Naranja' },
-            { id: 'm15', qty: 2, customName: 'Pollo con Salsa de Maní' },
-            { id: 'm2',  qty: 1, customName: 'Carne Oriental' },
-            { id: 'm12', qty: 1, customName: 'Carne Desmenuzada Tex-Mex' },
-            { id: 'm4',  qty: 1, customName: 'Bondiola desmechada con puré de boniato' },
-            { id: 'm11', qty: 1, customName: 'Cerdo Deshilado con Arroz y Glaseados' },
-            { id: 'm9',  qty: 1, customName: 'Bondiola al Pomelo' },
-            { id: 'm1',  qty: 1, customName: 'NPPRO Rice' },
-        ]
-    },
+/**
+ * PACKS ARMADOS POR EL CLIENTE
+ * Elige congelado o al vacío y suma las comidas que quiera (mínimo 5).
+ */
+export type PackType = 'frozen' | 'vacuum';
+
+export const PACK_CONFIG = {
+    MIN_MEALS: 5,
+    BIG_PACK_MEALS: 10,            // desde acá baja el precio y el envío es gratis
+    PRICE_PER_MEAL: 10500,         // congelado, de 5 a 9 comidas
+    PRICE_PER_MEAL_BIG: 10000,     // congelado, 10 comidas o más
+    VACUUM_EXTRA_PER_MEAL: 250,    // bolsa de vacío, por comida
+    SHIPPING: 3500,                // de 5 a 9 comidas
 };
+
+/** Precio por comida según la cantidad y el tipo de pack */
+export const getPackPricePerMeal = (meals: number, type: PackType) => {
+    const base = meals >= PACK_CONFIG.BIG_PACK_MEALS ? PACK_CONFIG.PRICE_PER_MEAL_BIG : PACK_CONFIG.PRICE_PER_MEAL;
+    return base + (type === 'vacuum' ? PACK_CONFIG.VACUUM_EXTRA_PER_MEAL : 0);
+};
+
+export const getPackShipping = (meals: number) =>
+    meals >= PACK_CONFIG.BIG_PACK_MEALS ? 0 : PACK_CONFIG.SHIPPING;

@@ -1,20 +1,27 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Check } from 'lucide-react';
-import { PREMADE_PACKS, MENU } from '../../data/data';
+import { Check, Snowflake, Package } from 'lucide-react';
+import { MENU, PACK_CONFIG, getPackPricePerMeal } from '../../data/data';
+import type { PackType } from '../../data/data';
 import FadeIn from '../common/FadeIn';
 import { formatPrice } from '../../utils/format';
 
-const PACKS = [
-    { key: 'mass5', perks: ['5 platos distintos', 'Volumen o Definición'] },
-    { key: 'mass10', perks: ['8 platos distintos', 'Volumen o Definición', 'Envío gratis en Trelew'], featured: true },
-] as const;
+const OPTIONS: { type: PackType; label: string; perks: string[]; featured?: boolean }[] = [
+    {
+        type: 'frozen',
+        label: 'Congelado',
+        perks: ['Directo al freezer', 'Entrega lunes o martes', `Envío gratis desde ${PACK_CONFIG.BIG_PACK_MEALS} comidas`],
+        featured: true,
+    },
+    {
+        type: 'vacuum',
+        label: 'Al vacío',
+        perks: ['Fresco, hasta 5 días en heladera', `+${formatPrice(PACK_CONFIG.VACUUM_EXTRA_PER_MEAL)} por comida (bolsa)`, `Envío gratis desde ${PACK_CONFIG.BIG_PACK_MEALS} comidas`],
+    },
+];
 
-// Platos del pack de 10, para mostrar qué trae
-const PACK_PLATES = (PREMADE_PACKS.mass10.items as { id: string }[])
-    .map(it => MENU.find(p => p.id === it.id))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p?.image))
-    .slice(0, 5);
+// Algunos platos para mostrar
+const PACK_PLATES = MENU.filter(p => p.packEligible && p.image).slice(0, 5);
 
 const PacksSection: React.FC = () => (
     <section className="relative overflow-hidden bg-[#0B0B0B] py-20 md:py-28">
@@ -25,11 +32,11 @@ const PacksSection: React.FC = () => (
                         Comé bien toda la semana
                     </h2>
                     <p className="mt-5 max-w-md text-white/60 md:text-lg">
-                        Los packs congelados vienen listos para el freezer. Sacás uno, lo calentás y listo:
-                        cuanto más grande el pack, menos pagás por comida.
+                        Armá tu pack con las comidas que quieras, congelado o al vacío. Desde {PACK_CONFIG.MIN_MEALS} comidas
+                        pagás menos por cada una, y desde {PACK_CONFIG.BIG_PACK_MEALS} todavía menos.
                     </p>
 
-                    {/* Platos del pack, superpuestos */}
+                    {/* Platos, superpuestos */}
                     <div className="mt-8 flex" aria-hidden="true">
                         {PACK_PLATES.map((p, i) => (
                             <img
@@ -45,32 +52,29 @@ const PacksSection: React.FC = () => (
                             />
                         ))}
                     </div>
-                    <p className="mt-4 text-sm text-white/45">Pedidos hasta el viernes. Los packs se entregan lunes o martes.</p>
                 </FadeIn>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                    {PACKS.map(({ key, perks, ...rest }, i) => {
-                        const pack = PREMADE_PACKS[key];
-                        const featured = 'featured' in rest && rest.featured;
-                        const perMeal = pack.price / pack.mealsCount;
+                    {OPTIONS.map(({ type, label, perks, featured }, i) => {
+                        const Icon = type === 'frozen' ? Snowflake : Package;
                         return (
-                            <FadeIn key={key} delay={i * 0.12}>
+                            <FadeIn key={type} delay={i * 0.12}>
                                 <article
                                     className={`flex h-full flex-col rounded-[2rem] p-6 md:p-7 ${featured
                                         ? 'bg-nppro-green text-black'
                                         : 'border border-white/10 bg-white/[0.03]'}`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-2xl font-black uppercase italic tracking-tight">Pack x{pack.mealsCount}</h3>
-                                        {featured && (
-                                            <span className="rounded-full bg-black px-3 py-1 text-xs font-bold text-nppro-green">El más elegido</span>
-                                        )}
-                                    </div>
-                                    <p className="mt-6 text-5xl font-black tabular-nums tracking-tight">{formatPrice(perMeal)}</p>
-                                    <p className={`mt-1 text-sm ${featured ? 'text-black/65' : 'text-white/50'}`}>
-                                        por comida ({formatPrice(pack.price)} el pack)
+                                    <h3 className="flex items-center gap-2 text-2xl font-black uppercase italic tracking-tight">
+                                        <Icon size={22} className={featured ? 'text-black' : 'text-nppro-green'} />{label}
+                                    </h3>
+                                    <p className={`mt-6 text-sm ${featured ? 'text-black/65' : 'text-white/50'}`}>desde</p>
+                                    <p className="text-5xl font-black tabular-nums tracking-tight">
+                                        {formatPrice(getPackPricePerMeal(PACK_CONFIG.BIG_PACK_MEALS, type))}
                                     </p>
-                                    <ul className="mt-6 space-y-2 text-sm font-medium">
+                                    <p className={`mt-1 text-sm ${featured ? 'text-black/65' : 'text-white/50'}`}>
+                                        por comida ({formatPrice(getPackPricePerMeal(PACK_CONFIG.MIN_MEALS, type))} de {PACK_CONFIG.MIN_MEALS} a {PACK_CONFIG.BIG_PACK_MEALS - 1})
+                                    </p>
+                                    <ul className="mt-6 flex-1 space-y-2 text-sm font-medium">
                                         {perks.map(perk => (
                                             <li key={perk} className="flex items-center gap-2">
                                                 <Check size={16} strokeWidth={3} className={featured ? 'text-black' : 'text-nppro-green'} />
