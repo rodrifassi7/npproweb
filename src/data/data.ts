@@ -30,39 +30,82 @@ export const CONFIG: AppConfig = {
     ],
 };
 
-type DayKey = 'LUN' | 'MAR' | 'MIE' | 'JUE' | 'VIE';
-
-const getTodayKey = (): DayKey | null => {
-    // getDay(): 0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado
-    const d = new Date().getDay();
-
-    if (d === 1) return 'LUN';
-    if (d === 2) return 'MAR';
-    if (d === 3) return 'MIE';
-    if (d === 4) return 'JUE';
-    if (d === 5) return 'VIE';
-
-    // sábado/domingo = repetimos viernes en el weeklyMenu.ts, acá no marcamos daily special
-    return null;
-};
-
-const todayKey = getTodayKey();
+export type DayKey = 'LUN' | 'MAR' | 'MIE' | 'JUE' | 'VIE';
+export type WeekKey = 'A' | 'B';
 
 /**
- * Mapa de "Especial del día"
- * (2 por día: almuerzo y cena)
+ * MENÚ DE LA QUINCENA (se repite cada dos semanas)
+ * 2 platos por día: [almuerzo, cena]
+ *
+ * m1 NPPRO Rice · m2 Carne Oriental · m3 Lemon Chicken · m4 Bondiola con puré de boniato
+ * m5 Carne Asada · m6 Cerdo glaseado con batata · m7 Bulk Wrap · m8 Pollo a la Naranja
+ * m9 Bondiola al Pomelo · m10 Pollo Tikka · m11 Cerdo Deshilado · m12 Carne Tex-Mex
+ * m13 Pollo Deshilado · m14 Hamburguesa Casera · m15 Pollo con Salsa de Maní · m16 Pollo Picante
  */
-export const DAILY_SPECIAL_IDS: Record<DayKey, string[]> = {
-    LUN: ['m1', 'm2'],
-    MAR: ['m3', 'm4'],
-    MIE: ['m5', 'm6'],
-    JUE: ['m7', 'm8'],
-    VIE: ['m9', 'm10'],
+export const BIWEEKLY_MENU_IDS: Record<WeekKey, Record<DayKey, [string, string]>> = {
+    A: {
+        LUN: ['m10', 'm5'],  // Pollo Tikka · Carne Asada
+        MAR: ['m12', 'm3'],  // Carne Desmenuzada Tex-Mex · Lemon Chicken
+        MIE: ['m8', 'm4'],   // Pollo a la Naranja · Bondiola con puré de boniato
+        JUE: ['m16', 'm7'],  // Pollo Picante con Dip de Yogur · Bulk Wrap
+        VIE: ['m15', 'm9'],  // Pollo con Salsa de Maní · Bondiola al Pomelo
+    },
+    B: {
+        LUN: ['m16', 'm6'],  // Pollo Picante con Dip de Yogur · Cerdo glaseado con batata
+        MAR: ['m11', 'm15'], // Cerdo Deshilado con Arroz · Pollo con Salsa de Maní
+        MIE: ['m13', 'm2'],  // Pollo Deshilado con Vegetales · Carne Oriental
+        JUE: ['m14', 'm3'],  // Hamburguesa Casera · Lemon Chicken
+        VIE: ['m10', 'm1'],  // Pollo Tikka · NPPRO Rice
+    },
 };
 
+/**
+ * Lunes en que arrancó una Semana A (fecha de Argentina).
+ * A partir de acá se alterna A / B cada 7 días.
+ * Semana A: 26/10/2026 · Semana B: 02/11/2026 · Semana A: 09/11/2026 ...
+ */
+const WEEK_A_START = { y: 2026, m: 10, d: 26 };
+
+const DAY_KEYS: DayKey[] = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE'];
+
+/** Fecha de hoy en Trelew (horario de Argentina), sin importar dónde esté quien mira la web. */
+const getArgentinaToday = () => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(new Date());
+    const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+    return { y: get('year'), m: get('month'), d: get('day') };
+};
+
+/**
+ * Qué semana (A/B) y qué día toca hoy.
+ * Sábado y domingo devuelven el viernes de esa semana, con isWeekend = true.
+ */
+export const getMenuDay = (): { week: WeekKey; day: DayKey; isWeekend: boolean } => {
+    const today = getArgentinaToday();
+    const todayUtc = Date.UTC(today.y, today.m - 1, today.d);
+    const startUtc = Date.UTC(WEEK_A_START.y, WEEK_A_START.m - 1, WEEK_A_START.d);
+    const daysSince = Math.round((todayUtc - startUtc) / 86400000);
+    const weekIndex = Math.floor(daysSince / 7);
+    const week: WeekKey = ((weekIndex % 2) + 2) % 2 === 0 ? 'A' : 'B';
+    const dayOfWeek = (((daysSince % 7) + 7) % 7); // 0=Lunes ... 6=Domingo
+    const isWeekend = dayOfWeek >= 5;
+    const day = DAY_KEYS[isWeekend ? 4 : dayOfWeek];
+    return { week, day, isWeekend };
+};
+
+const menuDay = getMenuDay();
+
+/** Los dos platos de hoy (almuerzo y cena) */
+export const TODAY_MENU_IDS: [string, string] = BIWEEKLY_MENU_IDS[menuDay.week][menuDay.day];
+
 const isSpecialToday = (id: string) => {
-    if (!todayKey) return false;
-    return DAILY_SPECIAL_IDS[todayKey].includes(id);
+    // sábado/domingo: en el home repetimos el viernes, pero en la carta no marcamos "Hoy"
+    if (menuDay.isWeekend) return false;
+    return TODAY_MENU_IDS.includes(id);
 };
 
 export const MENU: Product[] = [
@@ -233,7 +276,7 @@ export const MENU: Product[] = [
         description: 'Cerdo braseado y deshilado con miel y sésamo, arroz, zanahoria y chauchas.',
         price: 10800,
         image: undefined,
-        isDailySpecial: false,
+        isDailySpecial: isSpecialToday('m11'),
         packEligible: true,
         vacuumAvailable: true,
         macros: { kcal: 820, protein: 55, carbs: 98, fat: 22 },
@@ -248,7 +291,7 @@ export const MENU: Product[] = [
         description: 'Carne braseada con especias tex-mex, arroz, porotos negros, choclo y tomate asado.',
         price: 10800,
         image: carneTexMexImg,
-        isDailySpecial: false,
+        isDailySpecial: isSpecialToday('m12'),
         packEligible: true,
         vacuumAvailable: true,
         macros: { kcal: 870, protein: 62, carbs: 99, fat: 26 },
@@ -263,7 +306,7 @@ export const MENU: Product[] = [
         description: 'Pollo deshilado al limón y cilantro, con arroz, vegetales y sésamo.',
         price: 10800,
         image: polloDeshiladoImg,
-        isDailySpecial: false,
+        isDailySpecial: isSpecialToday('m13'),
         packEligible: true,
         vacuumAvailable: true,
         macros: { kcal: 730, protein: 58, carbs: 79, fat: 18 },
@@ -278,7 +321,7 @@ export const MENU: Product[] = [
         description: 'Hamburguesa de carne con batata y vegetales asados. Salsa de yogur y mostaza aparte.',
         price: 10800,
         image: hamburguesaImg,
-        isDailySpecial: false,
+        isDailySpecial: isSpecialToday('m14'),
         packEligible: true,
         vacuumAvailable: true,
         macros: { kcal: 650, protein: 44, carbs: 42, fat: 33 },
@@ -293,7 +336,7 @@ export const MENU: Product[] = [
         description: 'Pollo con arroz y vegetales salteados. Dip de maní, soja y miel aparte.',
         price: 10800,
         image: polloManiImg,
-        isDailySpecial: false,
+        isDailySpecial: isSpecialToday('m15'),
         packEligible: true,
         vacuumAvailable: true,
         macros: { kcal: 810, protein: 59, carbs: 90, fat: 23 },
@@ -308,7 +351,7 @@ export const MENU: Product[] = [
         description: 'Pollo al pimentón picante con batata y zapallitos asados. Dip de yogur y pepino aparte.',
         price: 10800,
         image: polloPicanteImg,
-        isDailySpecial: false,
+        isDailySpecial: isSpecialToday('m16'),
         packEligible: true,
         vacuumAvailable: true,
         macros: { kcal: 480, protein: 51, carbs: 40, fat: 13 },

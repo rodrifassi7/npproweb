@@ -1,77 +1,34 @@
-import { MENU, DAILY_SPECIAL_IDS } from './data';
+import { MENU, TODAY_MENU_IDS } from './data';
 import type { Product } from '../types';
 
-// Re-export constants/types if needed, or just helpers.
+// El menú rota cada dos semanas (Semana A / Semana B).
+// La rotación y el cálculo de qué día toca están en data.ts (BIWEEKLY_MENU_IDS + getMenuDay).
+// Sábado y domingo se muestra el menú del viernes de esa semana.
 
-// 1. Mapping: Day -> [lunchId, dinnerId]
-// We can just reuse what's in data.ts, but user asked to export WEEKLY_MENU_IDS specifically.
-// We'll map the English keys or existing keys to the IDs.
-// The user asked for "WEEKLY_MENU_IDS (mapping day -> lunchId + dinnerId)"
+const getProductById = (id: string): Product | undefined => MENU.find((p) => p.id === id);
 
-// We can make it easier to consume based on Day name if needed, 
-// but sticking to the DAILY_SPECIAL_IDS keys might be cleaner if allowed.
-// However, the internal keys in data.ts are LUN, MAR, etc.
-// Let's expose nice English keys if that helps, or just expose the map.
-
-// Let's follow Requirement 2: "WEEKLY_MENU_IDS (mapping day -> lunchId + dinnerId)"
-// We have `DAILY_SPECIAL_IDS` with 'LUN', 'MAR'...
-// I will create a mapping that might be easier to use or just re-export with clear typing.
-
-
-
-// If the user wants specific structure, I'll follow that. 
-// "mapping day -> lunchId + dinnerId"
-export const WEEKLY_MENU_IDS = {
-    monday: { lunch: DAILY_SPECIAL_IDS.LUN[0], dinner: DAILY_SPECIAL_IDS.LUN[1] },
-    tuesday: { lunch: DAILY_SPECIAL_IDS.MAR[0], dinner: DAILY_SPECIAL_IDS.MAR[1] },
-    wednesday: { lunch: DAILY_SPECIAL_IDS.MIE[0], dinner: DAILY_SPECIAL_IDS.MIE[1] },
-    thursday: { lunch: DAILY_SPECIAL_IDS.JUE[0], dinner: DAILY_SPECIAL_IDS.JUE[1] },
-    friday: { lunch: DAILY_SPECIAL_IDS.VIE[0], dinner: DAILY_SPECIAL_IDS.VIE[1] },
-};
-
-// Helper to find a product by ID safely
-const getProductById = (id: string): Product | undefined => {
-    return MENU.find((p) => p.id === id);
-};
-
-// 2. getTodayMenu(): returns { lunch: Product, dinner: Product }
+/** Devuelve los dos platos de hoy: { lunch, dinner } */
 export const getTodayMenu = (): { lunch: Product; dinner: Product } => {
-    const dayIndex = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-
-    // Requirement: "Weekend behavior: Saturday and Sunday should show the SAME menu as Friday."
-    // 0=Sun (use Fri), 6=Sat (use Fri), 5=Fri (use Fri)
-    // 1..4 = Mon..Thu
-
-    let dayData = WEEKLY_MENU_IDS.friday; // Default to Friday (covers Fri, Sat, Sun)
-
-    if (dayIndex === 1) dayData = WEEKLY_MENU_IDS.monday;
-    if (dayIndex === 2) dayData = WEEKLY_MENU_IDS.tuesday;
-    if (dayIndex === 3) dayData = WEEKLY_MENU_IDS.wednesday;
-    if (dayIndex === 4) dayData = WEEKLY_MENU_IDS.thursday;
-
-    // Retrieve products
-    const lunch = getProductById(dayData.lunch);
-    const dinner = getProductById(dayData.dinner);
+    const lunch = getProductById(TODAY_MENU_IDS[0]);
+    const dinner = getProductById(TODAY_MENU_IDS[1]);
 
     if (!lunch || !dinner) {
-        // Fallback or error - strictly shouldn't happen if data integrity is kept.
-        // Returning the first items in MENU or handling error. 
-        // For now, assume data integrity.
-        // If not found, let's return a safe fallback from MENU to avoid crash.
+        // No debería pasar si los IDs del menú están bien; evitamos que se rompa la web
         return { lunch: MENU[0], dinner: MENU[1] };
     }
 
     return { lunch, dinner };
 };
 
-// 3. getTodaySpecialByTime(): returns Product (before 16:00 lunch, after 16:00 dinner)
+/** Antes de las 16 h devuelve el almuerzo, después la cena (horario de Argentina) */
 export const getTodaySpecialByTime = (): Product => {
     const { lunch, dinner } = getTodayMenu();
-    const currentHour = new Date().getHours();
-
-    // "before 16:00 lunch" -> < 16
-    if (currentHour < 16) {
-        return lunch;
-    }
-    return dinner;
+    const hour = Number(
+        new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            hour: 'numeric',
+            hourCycle: 'h23',
+        }).format(new Date()),
+    );
+    return hour < 16 ? lunch : dinner;
 };
