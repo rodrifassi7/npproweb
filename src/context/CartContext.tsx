@@ -1,15 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Product, DiscountTier } from '../types';
 import type { CartItem } from '../types/cart';
-import { CONFIG, PREMADE_PACKS } from '../data/data';
-
-// Costo de envío por tipo de pack. x10 = gratis.
-const PACK_SHIPPING: Record<string, number> = {
-    lean5:  3500,
-    mass5:  3500,
-    lean10: 0,
-    mass10: 0,
-};
+import { CONFIG } from '../data/data';
 
 interface CartContextType {
     cart: CartItem[];
@@ -24,15 +16,12 @@ interface CartContextType {
     vacuumTotal: number;
     total: number;
     currentDiscountTier: DiscountTier | null;
-    selectedPremadePack: string | null;
-    setSelectedPremadePack: (pack: string | null) => void;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 const STORAGE_KEY = 'nppro_cart_v1';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [selectedPremadePack, setSelectedPremadePack] = useState<string | null>(null);
     const [cart, setCart] = useState<CartItem[]>(() => {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -77,9 +66,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    // Cuando el usuario modifica el carrito manualmente, deseleccionamos el pack
     const removeFromCart = (itemKey: string) => {
-        setSelectedPremadePack(null);
         setCart((prev) => {
             const existing = prev.find(item => item.key === itemKey);
             if (existing && existing.quantity > 1) {
@@ -90,7 +77,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateQuantity = (itemKey: string, quantity: number) => {
-        setSelectedPremadePack(null);
         setCart((prev) =>
             prev.map((item) => (item.key === itemKey ? { ...item, quantity } : item)).filter(item => item.quantity > 0)
         );
@@ -98,7 +84,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const clearCart = () => {
         setCart([]);
-        setSelectedPremadePack(null);
     };
 
     // ─── CALCULATIONS ──────────────────────────────────────────────
@@ -112,31 +97,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .filter((tier) => packEligibleCount >= tier.min)
         .sort((a, b) => b.discount - a.discount)[0] || null;
 
-    // Suma bruta de los ítems del carrito (se muestra como referencia, no como precio final cuando hay pack)
+    // Suma bruta de los ítems del carrito
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
     const eligibleSubtotal = cart.reduce((acc, item) =>
         item.packEligible ? acc + item.price * item.quantity : acc, 0
     );
 
-    // Descuento por volumen — solo aplica si NO hay pack predefinido seleccionado
-    const packDiscount = selectedPremadePack ? 0 : (!currentDiscountTier ? 0 : eligibleSubtotal * currentDiscountTier.discount);
+    // Descuento por volumen
+    const packDiscount = !currentDiscountTier ? 0 : eligibleSubtotal * currentDiscountTier.discount;
 
     const vacuumTotal = cart.reduce((acc, item) =>
         item.useVacuum ? acc + (CONFIG.vacuumExtraPrice || 200) * item.quantity : acc, 0
     );
 
-    // Envío: $3.500 para x5, gratis para x10. Sin pack seleccionado = sin envío automático.
-    const shippingCost = selectedPremadePack ? (PACK_SHIPPING[selectedPremadePack] ?? 0) : 0;
+    // El envío de los packs se calcula en la página de packs (no pasan por el carrito)
+    const shippingCost = 0;
 
-    let total: number;
-    if (selectedPremadePack && PREMADE_PACKS[selectedPremadePack]) {
-        // Precio fijo del pack + envío correspondiente (sin sumar precios individuales ni aplicar descuentos)
-        total = PREMADE_PACKS[selectedPremadePack].price + shippingCost + vacuumTotal;
-    } else {
-        // Compra suelta: suma de ítems - descuento por volumen + vacuum
-        total = subtotal - packDiscount + vacuumTotal;
-    }
+    // Compra suelta: suma de ítems - descuento por volumen + vacío
+    const total = subtotal - packDiscount + vacuumTotal;
 
     return (
         <CartContext.Provider
@@ -153,8 +132,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 vacuumTotal,
                 total,
                 currentDiscountTier,
-                selectedPremadePack,
-                setSelectedPremadePack,
             }}
         >
             {children}
