@@ -1,9 +1,11 @@
+export type Variant = 'mass' | 'lean';
+
 export interface CartItem {
-    key: string;       // ${productId}_${useVacuum ? "vac" : "std"}
-    id: string;        // Compatibility with existing code (productId)
-    name: string;
+    key: string;              // ${productId}_${variant}_${useVacuum ? "vac" : "std"}
+    id: string;               // id del producto
+    name: string;             // nombre del plato, sin la versión
+    variant: Variant | null;  // Volumen (mass) o Definición (lean); null si el plato no tiene versiones
     category: string;
-    price: number;
     quantity: number;
     useVacuum: boolean;
     image: string;

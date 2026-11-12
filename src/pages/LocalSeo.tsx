@@ -82,7 +82,7 @@ const LocalSeo: React.FC = () => {
                             <div className="space-y-8">
                                 {[
                                     { step: 1, title: "Elegí tus comidas", desc: "Seleccioná tus favoritos de nuestro menú semanal actualizado." },
-                                    { step: 2, title: "Armá tu Pack", desc: "Llevá 14, 20 o más viandas con descuentos exclusivos." },
+                                    { step: 2, title: "Armá tu Pack", desc: "Desde 5 comidas, congelado o al vacío. Con 10 o más pagás menos y el envío es gratis." },
                                     { step: 3, title: "Retirá o recibí", desc: "Envíos a domicilio en Trelew o pick-up en punto central." }
                                 ].map((s) => (
                                     <div key={s.step} className="flex gap-5 relative">
