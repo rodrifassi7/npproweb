@@ -361,7 +361,7 @@ export const MENU: Product[] = [
  * PRECIOS (único lugar donde se tocan)
  *
  * Comida suelta (1 a 4, o hasta 9 desde la carta): $10.800 · al vacío $11.300
- * Pack congelado:  $10.500 de 5 a 9 comidas · $10.000 desde 10
+ * Pack congelado:  $10.800 de 5 a 9 comidas · $10.000 desde 10
  * Pack al vacío:   $11.300 de 5 a 9 comidas · $10.800 desde 10
  * Envío de packs:  $3.500 de 5 a 9 · gratis desde 10 · sin cargo si retira en el local
  */
@@ -371,7 +371,7 @@ export const PACK_CONFIG = {
     MIN_MEALS: 5,
     BIG_PACK_MEALS: 10,            // desde acá baja el precio y el envío es gratis
     PRICES: {
-        frozen: { small: 10500, big: 10000 },
+        frozen: { small: 10800, big: 10000 },
         vacuum: { small: 11300, big: 10800 },
     } as Record<PackType, { small: number; big: number }>,
     SHIPPING: 3500,                // de 5 a 9 comidas

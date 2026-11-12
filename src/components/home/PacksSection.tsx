@@ -16,7 +16,7 @@ const OPTIONS: { type: PackType; label: string; perks: string[]; featured?: bool
     {
         type: 'vacuum',
         label: 'Al vacío',
-        perks: ['Fresco, hasta 5 días en heladera', 'El día lo coordinamos por WhatsApp', `Envío gratis desde ${PACK_CONFIG.BIG_PACK_MEALS} comidas`],
+        perks: ['Dura más tiempo fresca en la heladera', 'El día lo coordinamos por WhatsApp', `Envío gratis desde ${PACK_CONFIG.BIG_PACK_MEALS} comidas`],
     },
 ];
 

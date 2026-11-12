@@ -21,7 +21,7 @@ const FAQSection: React.FC = () => {
         },
         {
             q: "¿Cuánto duran las viandas?",
-            a: "Las viandas frescas duran 24 a 48 horas en heladera. Envasadas al vacío duran hasta 5 días en heladera, y si no las comés a tiempo las podés pasar al freezer. Los packs congelados se guardan directo en el freezer."
+            a: "Las viandas frescas duran 24 a 48 horas en heladera. Envasadas al vacío duran más tiempo frescas en la heladera, y si no las comés a tiempo las podés pasar al freezer. Los packs congelados se guardan directo en el freezer."
         }
     ];
 
