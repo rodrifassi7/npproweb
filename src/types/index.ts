@@ -24,12 +24,6 @@ export interface Product {
   tags?: string[];
 }
 
-export interface DiscountTier {
-  min: number;
-  max: number;
-  discount: number;
-}
-
 export interface AppConfig {
   ACCENT_COLOR: string;
   WHATSAPP_NUMBER: string;
@@ -37,7 +31,6 @@ export interface AppConfig {
   PICKUP_ADDRESS: string;
   VACUUM_PRICE_PER_ITEM: number;
   vacuumExtraPrice: number;
-  DISCOUNT_TIERS: DiscountTier[];
 }
 
 export interface CartItem extends Product {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MENU } from '../../data/data';
+import { MENU, PACK_CONFIG, getPackPricePerMeal } from '../../data/data';
+import { formatPrice } from '../../utils/format';
 
 // Platos que van girando en la portada (se leen del menú, así los macros siempre coinciden).
 const HERO_IDS = ['m10', 'm6', 'm15', 'm12', 'm1'];
@@ -91,7 +92,7 @@ const HeroSection: React.FC = () => {
                     </div>
 
                     <p className="hero-fade mt-6 text-sm text-white/45" style={{ '--d': '620ms' } as React.CSSProperties}>
-                        Pack de 10: <span className="font-semibold text-white/80">$10.000 por comida</span>, con envío gratis en Trelew.
+                        Pack de {PACK_CONFIG.BIG_PACK_MEALS}: <span className="font-semibold text-white/80">{formatPrice(getPackPricePerMeal(PACK_CONFIG.BIG_PACK_MEALS, 'frozen'))} por comida</span>, con envío gratis en Trelew.
                     </p>
                 </div>
 

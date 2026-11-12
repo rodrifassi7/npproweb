@@ -1,67 +1,74 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Loader2, Package, Send, ShoppingCart, Snowflake, Ticket, Trash2, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { CONFIG } from '../data/data';
+import { CONFIG, MENU, PACK_CONFIG, getPackPricePerMeal } from '../data/data';
+import type { PackType } from '../data/data';
+import type { Variant } from '../types/cart';
+import CustomerFields from '../components/order/CustomerFields';
 import { formatPrice } from '../utils/format';
-import { MapPin, Truck, Store, MessageCircle, AlertCircle, Trash2, ShoppingCart, Ticket, Loader2, X } from 'lucide-react';
+import {
+    DAYS_ANY, DAYS_FROZEN, PACK_STORAGE_KEY, buildCartOrder, buildOrderMessage, countPackMeals,
+    isCustomerReady, loadCustomer, openWhatsApp, saveCustomer, saveOrder,
+} from '../utils/order';
+import type { Customer, SavedPack } from '../utils/order';
+
 const getSupabase = () => import('../lib/supabase').then(m => m.supabase);
 
-const Checkout: React.FC = () => {
-    const { cart, subtotal, packDiscount, total, vacuumTotal, removeFromCart, currentDiscountTier } = useCart();
-    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-    const [formData, setFormData] = useState({
-        name: '',
-        phone: '',
-        deliveryType: 'envio', // 'envio' | 'retiro'
-        address: '',
-        references: '',
-        deliveryDay: CONFIG.DELIVERY_DAYS[0],
-        paymentMethod: 'Transferencia',
-        notes: '',
-        useVacuumGlobal: false
-    });
+const SINGLE_PRICE = MENU[0]?.price ?? 0;
 
-    // Coupon State
+const option = (active: boolean) =>
+    `flex flex-col rounded-2xl border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nppro-green ${active
+        ? 'border-nppro-green bg-nppro-green/10'
+        : 'border-white/10 bg-white/[0.03] hover:border-white/25'}`;
+
+const Checkout: React.FC = () => {
+    const { cart, removeFromCart, setItemVariant, clearCart } = useCart();
+    const navigate = useNavigate();
+    const [customer, setCustomer] = useState<Customer>(loadCustomer);
+    const [packType, setPackType] = useState<PackType | null>(null);
+    const [allVacuum, setAllVacuum] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [sent, setSent] = useState(false);
+
+    // Cupón
     const [couponCode, setCouponCode] = useState('');
-    const [couponStatus, setCouponStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
+    const [couponStatus, setCouponStatus] = useState<'idle' | 'validating' | 'error'>('idle');
     const [couponMessage, setCouponMessage] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent: number } | null>(null);
 
-    // Calculated values
-    const foodNetTotal = subtotal - packDiscount;
-    const couponDiscountAmount = appliedCoupon ? Math.round(foodNetTotal * (appliedCoupon.percent / 100)) : 0;
-    const finalTotal = total - couponDiscountAmount;
+    const meals = cart.reduce((acc, item) => acc + item.quantity, 0);
+    const packMeals = countPackMeals(cart);
+    // Desde 10 comidas es un pack: mismo precio que armándolo en /packs
+    const isPack = packMeals >= PACK_CONFIG.BIG_PACK_MEALS;
+    const canBePack = !isPack && packMeals >= PACK_CONFIG.MIN_MEALS;
 
-    // Supabase Validation
+    const order = buildCartOrder(cart, {
+        packType,
+        allVacuum,
+        deliveryType: customer.deliveryType,
+        couponPercent: appliedCoupon?.percent,
+        couponCode: appliedCoupon?.code,
+    });
+
+    const days = isPack && packType === 'frozen' ? DAYS_FROZEN : DAYS_ANY;
+    const customerForOrder: Customer = days.includes(customer.deliveryDay) ? customer : { ...customer, deliveryDay: days[0] };
+    const updateCustomer = (patch: Partial<Customer>) => setCustomer(prev => ({ ...prev, ...patch }));
+
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
         setCouponStatus('validating');
         setCouponMessage('');
-
         try {
-            // RPC call to validate_coupon
             const supabase = await getSupabase();
             const { data, error } = await supabase.rpc('validate_coupon', {
                 input_code: couponCode,
-                input_phone: formData.phone || null
-                // FIXME: The user doesn't strictly input "Phone", we have Name/Address. 
-                // We should probably ask for Phone in the form if we want per-customer limits? 
-                // For now, passing null to skip phone check unless we add phone field.
-                // Assuming user wants to enforce it on "Customer Identity" which usually needs phone/email.
+                input_phone: customer.phone || null,
             });
-
             if (error) throw error;
-
             if (data.valid) {
-                // Check if it's the exact same code
-                if (appliedCoupon?.code === data.code) {
-                    setCouponStatus('success');
-                    return;
-                }
-
                 setAppliedCoupon({ code: data.code, percent: data.percent });
-                setCouponStatus('success');
-                setCouponMessage(data.message);
+                setCouponStatus('idle');
             } else {
                 setAppliedCoupon(null);
                 setCouponStatus('error');
@@ -71,63 +78,7 @@ const Checkout: React.FC = () => {
             console.error('Coupon error:', err);
             setAppliedCoupon(null);
             setCouponStatus('error');
-            setCouponMessage('Error al validar cupón');
-        }
-    };
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleCheckout = async () => {
-        setIsSubmitting(true);
-        try {
-            // 1. Create Order in Supabase
-            const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-
-            const orderNotes = `
-WEB ORDER DETALLES:
-- Cliente: ${formData.name}
-- Tipo Entrega: ${formData.deliveryType}
-- Dirección: ${formData.deliveryType === 'envio' ? formData.address : CONFIG.PICKUP_ADDRESS}
-- Referencias: ${formData.references}
-- Día: ${formData.deliveryDay}
-- Medio Pago: ${formData.paymentMethod}
-- Total Items: ${totalItems}
-- Notas cliente: ${formData.notes}
-- JSON Items: ${JSON.stringify(cart.map(i => ({n: i.name, q: i.quantity, v: i.useVacuum})))}
-            `.trim();
-
-            const orderData = {
-                customer_name: formData.name,
-                phone: formData.phone,
-                delivery: formData.deliveryType === 'envio', // mapped to boolean if possible, or left as string if column allows. The schema expects boolean "delivery" or we mapped it.
-                status: 'nuevo',
-                subtotal: subtotal,
-                total: finalTotal,
-                notes: orderNotes,
-                channel: 'web',
-                cantidad_viandas: totalItems,
-                coupon_code: appliedCoupon?.code || null,
-                discount_amount: couponDiscountAmount,
-                discount_percent: appliedCoupon?.percent || 0,
-            };
-
-            const supabase = await getSupabase();
-            const { error } = await supabase.from('orders').insert([orderData]);
-
-            if (error) {
-                console.error("Order save error:", error);
-                // Eliminamos el alert para que el pedido por WhatsApp no se interrumpa
-                // por errores de RLS (Row Level Security) o de schema.
-            }
-
-            // 2. Open WhatsApp
-            generateWhatsAppLink();
-
-        } catch (e) {
-            console.error(e);
-            generateWhatsAppLink(); // Fallback
-        } finally {
-            setIsSubmitting(false);
+            setCouponMessage('No pudimos validar el cupón. Probá de nuevo.');
         }
     };
 
@@ -138,63 +89,56 @@ WEB ORDER DETALLES:
         setCouponMessage('');
     };
 
-    const { clearCart } = useCart();
+    const canSend = Boolean(order) && isCustomerReady(customer) && !isSubmitting;
+    const hint = isPack && !packType
+        ? 'Elegí si el pack va congelado o al vacío.'
+        : !customer.name.trim()
+            ? 'Completá tu nombre para pedir.'
+            : !isCustomerReady(customer)
+                ? 'Completá la dirección de entrega.'
+                : 'Se abre WhatsApp con tu pedido escrito. Solo tenés que enviarlo.';
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value, type } = e.target as HTMLInputElement;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-        }));
+    const handleCheckout = async () => {
+        if (!order || !canSend) return;
+        setIsSubmitting(true);
+        const message = buildOrderMessage(order, customerForOrder);
+        saveCustomer(customerForOrder);
+        // WhatsApp primero: si se abre después de esperar al guardado, el celular lo bloquea como ventana emergente
+        openWhatsApp(message);
+        await saveOrder(order, customerForOrder, message);
+        setIsSubmitting(false);
+        setSent(true);
     };
 
-    const generateWhatsAppLink = () => {
-        const { name, deliveryType, address, references, deliveryDay, paymentMethod, notes, useVacuumGlobal } = formData;
-
-        let message = `*NUEVO PEDIDO NPPRO*\n\n`;
-        message += `👤 *Nombre:* ${name}\n`;
-        if (formData.phone) message += `📱 *Tel:* ${formData.phone}\n`;
-        message += `🚚 *Tipo:* ${deliveryType === 'envio' ? 'Envío a domicilio' : 'Retiro en local'}\n`;
-
-        if (deliveryType === 'envio') {
-            message += `📍 *Dirección:* ${address}\n`;
-            if (references) message += `ℹ️ *Ref:* ${references}\n`;
-        } else {
-            message += `📍 *Retiro en:* ${CONFIG.PICKUP_ADDRESS}\n`;
-        }
-
-        message += `📅 *Día elegido:* ${deliveryDay}\n`;
-        message += `💳 *Pago:* ${paymentMethod}\n`;
-        if (useVacuumGlobal) message += `❄️ *Envasado al vacío:* Sí\n`;
-        if (notes) message += `📝 *Notas:* ${notes}\n\n`;
-
-        message += `*DETALLE DEL PEDIDO:*\n`;
-        cart.forEach(item => {
-            message += `• ${item.quantity}x ${item.name} (${formatPrice(item.price * item.quantity)})\n`;
+    /** De 5 a 9 comidas: las pasa al armador de packs para que elija congelado o al vacío */
+    const moveToPack = () => {
+        const qty: Record<string, number> = {};
+        let lean = 0;
+        cart.filter(i => i.packEligible).forEach(i => {
+            qty[i.id] = (qty[i.id] ?? 0) + i.quantity;
+            if (i.variant === 'lean') lean += i.quantity;
         });
-
-        message += `\n*RESUMEN TOTAL:*\n`;
-        message += `Subtotal: ${formatPrice(subtotal)}\n`;
-        if (packDiscount > 0) message += `Descuento Pack (${Math.round(currentDiscountTier?.discount! * 100)}%): -${formatPrice(packDiscount)}\n`;
-        if (appliedCoupon) message += `🎟️ Cupón (${appliedCoupon.code}): -${formatPrice(couponDiscountAmount)}\n`;
-        if (vacuumTotal > 0) message += `Extra Vacío: ${formatPrice(vacuumTotal)}\n`;
-        message += `*TOTAL FINAL: ${formatPrice(finalTotal)}*\n`;
-
-        const encodedMessage = encodeURIComponent(message);
-        window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+        const goal: Variant = lean > packMeals / 2 ? 'lean' : 'mass';
+        const saved: SavedPack = { step: 1, goal, type: null, qty };
+        try {
+            sessionStorage.setItem(PACK_STORAGE_KEY, JSON.stringify(saved));
+        } catch { /* sin storage */ }
+        clearCart();
+        navigate('/packs');
     };
 
     if (cart.length === 0) {
         return (
-            <div className="pt-40 pb-24 min-h-screen text-center">
+            <div className="min-h-screen bg-[#0B0B0B] pb-24 pt-40 text-center text-white">
                 <div className="container mx-auto px-6">
-                    <div className="glass max-w-lg mx-auto p-12 rounded-[40px]">
-                        <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/10">
-                            <ShoppingCart size={32} className="text-nppro-gray" />
+                    <div className="mx-auto max-w-lg rounded-[2rem] border border-white/10 bg-white/[0.03] p-10">
+                        <ShoppingCart size={32} className="mx-auto text-white/40" />
+                        <h1 className="mt-6 text-3xl font-black uppercase italic">Tu pedido está vacío</h1>
+                        <p className="mt-3 text-white/60">Armá un pack desde {PACK_CONFIG.MIN_MEALS} comidas o sumá platos sueltos desde el menú.</p>
+                        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                            <Link to="/packs" className="rounded-full bg-nppro-green px-7 py-3.5 text-sm font-black uppercase italic text-black">Armar mi pack</Link>
+                            <Link to="/menu" className="rounded-full border border-white/15 px-7 py-3.5 text-sm font-bold text-white/80">Ver el menú</Link>
                         </div>
-                        <h2 className="text-3xl font-black italic mb-4 uppercase">Tu carrito está vacío</h2>
-                        <p className="text-nppro-gray mb-10">Agregá algunas viandas deliciosas para comenzar.</p>
-                        <Link to="/menu" className="btn-primary">Ver Menú</Link>
                     </div>
                 </div>
             </div>
@@ -202,290 +146,201 @@ WEB ORDER DETALLES:
     }
 
     return (
-        <div className="pt-32 pb-24 min-h-screen">
+        <div className="min-h-screen bg-[#0B0B0B] pb-24 pt-28 text-white">
             <div className="container mx-auto px-6">
-                <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-10 md:mb-12 uppercase leading-none">Tu pedido</h1>
+                <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter md:text-7xl">Tu pedido</h1>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-
-                    {/* Form Side */}
-                    <div className="lg:col-span-7 space-y-8">
-
-                        {/* Personal Data */}
-                        <div className="glass p-8 rounded-[32px]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> Tus datos</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-2 ml-1">Nombre completo *</label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        placeholder="Ej: Juan Pérez"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-nppro-green/50 transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-2 ml-1">Teléfono (WhatsApp)</label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        placeholder="Ej: 11 1234 5678"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-nppro-green/50 transition-all"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Delivery Type */}
-                        <div className="glass p-8 rounded-[32px]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> Entrega</h2>
-
-                            <div className="grid grid-cols-2 gap-4 mb-8 text-center">
-                                <button
-                                    onClick={() => setFormData(prev => ({ ...prev, deliveryType: 'envio' }))}
-                                    className={`p-6 rounded-3xl border transition-all flex flex-col items-center gap-3 ${formData.deliveryType === 'envio' ? 'bg-nppro-green/10 border-nppro-green text-white shadow-[0_0_20px_rgba(22,163,74,0.2)]' : 'bg-white/5 border-white/10 text-nppro-gray'}`}
-                                >
-                                    <Truck size={28} />
-                                    <span className="font-bold">Envío</span>
-                                </button>
-                                <button
-                                    onClick={() => setFormData(prev => ({ ...prev, deliveryType: 'retiro' }))}
-                                    className={`p-6 rounded-3xl border transition-all flex flex-col items-center gap-3 ${formData.deliveryType === 'retiro' ? 'bg-nppro-green/10 border-nppro-green text-white shadow-[0_0_20px_rgba(22,163,74,0.2)]' : 'bg-white/5 border-white/10 text-nppro-gray'}`}
-                                >
-                                    <Store size={28} />
-                                    <span className="font-bold">Retiro</span>
+                <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px] lg:gap-14">
+                    <div className="min-w-0 space-y-12">
+                        {/* Comidas */}
+                        <section aria-labelledby="co-comidas">
+                            <div className="flex items-end justify-between gap-3">
+                                <h2 id="co-comidas" className="text-2xl font-black">{meals} {meals === 1 ? 'comida' : 'comidas'}</h2>
+                                <button type="button" onClick={clearCart} className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white">
+                                    <Trash2 size={14} /> Vaciar
                                 </button>
                             </div>
-
-                            {formData.deliveryType === 'envio' ? (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-2 ml-1">Dirección de entrega *</label>
-                                        <input
-                                            type="text"
-                                            name="address"
-                                            value={formData.address}
-                                            onChange={handleInputChange}
-                                            placeholder="Calle y altura"
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-nppro-green/50 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-2 ml-1">Referencias de la zona</label>
-                                        <input
-                                            type="text"
-                                            name="references"
-                                            value={formData.references}
-                                            onChange={handleInputChange}
-                                            placeholder="Ej: Entre calles, frente a plaza..."
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 focus:outline-none focus:border-nppro-green/50 transition-all"
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-6 bg-white/5 rounded-2xl border border-white/5 flex items-start gap-4">
-                                    <MapPin className="text-nppro-green mt-1 shrink-0" size={20} />
-                                    <div>
-                                        <div className="font-bold mb-1">Punto de retiro</div>
-                                        <p className="text-sm text-nppro-gray">{CONFIG.PICKUP_ADDRESS}</p>
-                                        <p className="text-xs text-nppro-green mt-2 font-bold uppercase tracking-tighter">Coordinar horario por WhatsApp</p>
-                                    </div>
-                                </div>
-                            )}
-
-
-                        </div>
-
-                        {/* Payment & Extras */}
-                        <div className="glass p-8 rounded-[32px]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><div className="w-1.5 h-6 bg-nppro-green rounded-full" /> Pago y extras</h2>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-nppro-gray uppercase tracking-widest mb-4 ml-1">Medio de pago</label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        {['Transferencia', 'Mercado Pago', 'Efectivo'].map(method => (
-                                            <label key={method} className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${formData.paymentMethod === method ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="paymentMethod"
-                                                    value={method}
-                                                    checked={formData.paymentMethod === method}
-                                                    onChange={handleInputChange}
-                                                    className="hidden"
-                                                />
-                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.paymentMethod === method ? 'border-nppro-green' : 'border-white/20'}`}>
-                                                    {formData.paymentMethod === method && <div className="w-2 h-2 bg-nppro-green rounded-full" />}
-                                                </div>
-                                                <span className="font-bold text-sm tracking-tight">{method}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="pt-6 border-t border-white/10">
-                                    <label className="flex items-center gap-4 cursor-pointer group">
-                                        <div className="relative">
-                                            <input
-                                                type="checkbox"
-                                                name="useVacuumGlobal"
-                                                checked={formData.useVacuumGlobal}
-                                                onChange={handleInputChange}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-14 h-7 bg-white/10 peer-checked:bg-nppro-green rounded-full transition-all border border-white/10"></div>
-                                            <div className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-7"></div>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-bold text-sm">¿Envasar todo al vacío?</div>
-                                            <p className="text-[10px] text-nppro-gray uppercase font-bold mt-0.5">+ {formatPrice(CONFIG.VACUUM_PRICE_PER_ITEM)} por comida. Dura hasta 5 días en heladera</p>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Cart View / Summary Side */}
-                    <div className="lg:col-span-5">
-                        <div className="sticky top-32 glass rounded-[40px] overflow-hidden border-white/10">
-                            <div className="p-8 border-b border-white/5">
-                                <h2 className="text-2xl font-black italic mb-2 uppercase flex items-center justify-between">
-                                    Resumen <span className="text-nppro-gray text-sm font-bold">{cartCount} {cartCount === 1 ? 'comida' : 'comidas'}</span>
-                                </h2>
-                                <button
-                                    onClick={clearCart}
-                                    className="text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-colors flex items-center gap-1"
-                                >
-                                    <Trash2 size={10} /> Vaciar carrito
-                                </button>
-                            </div>
-
-                            <div className="max-h-[40vh] overflow-y-auto p-8 space-y-4">
+                            <ul className="mt-5 space-y-3">
                                 {cart.map(item => (
-                                    <div key={item.key} className="flex gap-4 group">
-                                        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
-                                            <img src={item.image} alt="" loading="lazy" className="w-full h-full object-contain" />
-                                        </div>
+                                    <li key={item.key} className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                                        {item.image
+                                            ? <img src={item.image} alt="" loading="lazy" width={640} height={640} className="h-14 w-14 shrink-0 object-contain" />
+                                            : <span className="h-14 w-14 shrink-0 rounded-full bg-white/5" aria-hidden="true" />}
                                         <div className="min-w-0 flex-1">
-                                            <div className="flex justify-between gap-3 font-bold text-sm">
-                                                <span className="min-w-0 leading-snug">{item.quantity}x {item.name} {item.useVacuum && <span className="text-[9px] text-nppro-green font-black ml-1">(VACÍO)</span>}</span>
-                                                <span className="shrink-0 tabular-nums">{formatPrice(item.price * item.quantity + (item.useVacuum ? CONFIG.vacuumExtraPrice * item.quantity : 0))}</span>
-                                            </div>
-                                            <div className="flex justify-between mt-1">
-                                                <span className="text-[10px] text-nppro-gray font-black uppercase tracking-widest">{item.category}</span>
-                                                <button onClick={() => removeFromCart(item.key)} className="text-red-500/50 hover:text-red-500 transition-colors">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="p-8 bg-white/5 space-y-4 border-t border-white/10 text-sm">
-                                <div className="flex justify-between text-nppro-gray">
-                                    <span>Productos</span>
-                                    <span className="tabular-nums">{formatPrice(subtotal)}</span>
-                                </div>
-                                {packDiscount > 0 && (
-                                    <div className="flex justify-between text-nppro-green font-bold">
-                                        <span>Descuento Pack</span>
-                                        <span className="tabular-nums">-{formatPrice(packDiscount)}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-nppro-gray italic">
-                                    <span>Extra al vacío</span>
-                                    <span className="tabular-nums">+{formatPrice(vacuumTotal)}</span>
-                                </div>
-
-                                {/* Coupon Section */}
-                                <div className="pt-4 border-t border-white/10 space-y-3">
-                                    {!appliedCoupon ? (
-                                        <div className="space-y-2">
-                                            <div className="flex gap-2">
-                                                <div className="relative flex-1">
-                                                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-nppro-gray" size={16} />
-                                                    <input
-                                                        type="text"
-                                                        value={couponCode}
-                                                        onChange={(e) => setCouponCode(e.target.value)}
-                                                        placeholder="Código de descuento"
-                                                        className="w-full bg-black/20 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-nppro-green/50"
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
-                                                    />
+                                            <p className="font-bold leading-tight">
+                                                {item.quantity}x {item.name}
+                                                {!isPack && item.useVacuum && !allVacuum && <span className="ml-2 text-xs font-bold text-nppro-green">al vacío</span>}
+                                            </p>
+                                            {item.variant && (
+                                                <div className="mt-2 inline-flex rounded-full border border-white/10 p-0.5 text-xs font-bold" role="radiogroup" aria-label={`Versión de ${item.name}`}>
+                                                    {(['mass', 'lean'] as Variant[]).map(v => (
+                                                        <button
+                                                            key={v}
+                                                            type="button"
+                                                            role="radio"
+                                                            aria-checked={item.variant === v}
+                                                            onClick={() => setItemVariant(item.key, v)}
+                                                            className={`rounded-full px-3 py-1.5 transition-colors ${item.variant === v ? 'bg-nppro-green text-black' : 'text-white/55 hover:text-white'}`}
+                                                        >
+                                                            {v === 'mass' ? 'Volumen' : 'Definición'}
+                                                        </button>
+                                                    ))}
                                                 </div>
-                                                <button
-                                                    onClick={handleApplyCoupon}
-                                                    disabled={!couponCode || couponStatus === 'validating'}
-                                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
-                                                >
-                                                    {couponStatus === 'validating' ? <Loader2 className="animate-spin" size={16} /> : 'Aplicar'}
-                                                </button>
-                                            </div>
-                                            {couponStatus === 'error' && (
-                                                <p className="text-xs text-red-500 font-bold ml-1">{couponMessage}</p>
                                             )}
                                         </div>
-                                    ) : (
-                                        <div className="bg-nppro-green/10 border border-nppro-green/30 rounded-xl p-3 flex items-center justify-between">
-                                            <div>
-                                                <div className="text-nppro-green font-bold text-sm flex items-center gap-2">
-                                                    <Ticket size={14} /> {appliedCoupon.code}
-                                                </div>
-                                                <div className="text-xs text-nppro-green/80 font-medium">
-                                                    {appliedCoupon.percent}% OFF aplicado
-                                                </div>
-                                            </div>
-                                            <button onClick={removeCoupon} className="text-nppro-green/60 hover:text-nppro-green transition-colors">
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    )}
+                                        <button
+                                            type="button"
+                                            onClick={() => removeFromCart(item.key)}
+                                            aria-label={`Sacar una ${item.name}`}
+                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 text-white/70 hover:border-white/40 hover:text-white"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Link to="/menu" className="mt-4 inline-block text-sm font-bold text-nppro-green hover:underline">Sumar más comidas</Link>
+                        </section>
 
-                                    {appliedCoupon && (
-                                        <div className="flex justify-between text-nppro-green font-bold">
-                                            <span>Descuento Cupón</span>
-                                            <span className="tabular-nums">-{formatPrice(couponDiscountAmount)}</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-                                    <div className="font-black italic uppercase text-lg tracking-tighter">Total</div>
-                                    <div className="text-3xl font-black text-nppro-green shadow-green-500/20 drop-shadow-sm">
-                                        {formatPrice(finalTotal)}
+                        {/* Cómo las quiere */}
+                        <section aria-labelledby="co-tipo">
+                            {isPack ? (
+                                <>
+                                    <h2 id="co-tipo" className="text-2xl font-black">Llevás {packMeals} comidas: es un pack</h2>
+                                    <p className="mt-2 text-white/55">Tenés precio de pack y envío gratis. Elegí cómo lo querés.</p>
+                                    <div className="mt-5 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Tipo de pack">
+                                        {(['frozen', 'vacuum'] as PackType[]).map(t => {
+                                            const Icon = t === 'frozen' ? Snowflake : Package;
+                                            return (
+                                                <button key={t} type="button" role="radio" aria-checked={packType === t} onClick={() => setPackType(t)} className={option(packType === t)}>
+                                                    <span className="flex items-center gap-2 text-lg font-black uppercase italic"><Icon size={18} className="text-nppro-green" />{t === 'frozen' ? 'Congelado' : 'Al vacío'}</span>
+                                                    <span className="mt-1 text-2xl font-black tabular-nums">{formatPrice(getPackPricePerMeal(packMeals, t))} <span className="text-sm font-normal text-white/50">por comida</span></span>
+                                                    <span className="mt-1 text-sm text-white/60">{t === 'frozen' ? 'Directo al freezer. Entrega lunes o martes.' : 'Fresco, hasta 5 días en heladera.'}</span>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                </div>
-                            </div>
-
-                            <div className="p-8">
-                                <button
-                                    disabled={!formData.name || (formData.deliveryType === 'envio' && !formData.address) || isSubmitting}
-                                    onClick={handleCheckout}
-                                    className="btn-primary w-full py-5 text-lg shadow-xl shadow-nppro-green/20 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="animate-spin" size={24} />
-                                            <span>Procesando...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            Confirmar por WhatsApp <MessageCircle size={24} />
-                                        </>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 id="co-tipo" className="text-2xl font-black">¿Cómo las querés?</h2>
+                                    <div className="mt-5 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Envasado">
+                                        <button type="button" role="radio" aria-checked={!allVacuum} onClick={() => setAllVacuum(false)} className={option(!allVacuum)}>
+                                            <span className="text-lg font-black uppercase italic">Frescas del día</span>
+                                            <span className="mt-1 text-2xl font-black tabular-nums">{formatPrice(SINGLE_PRICE)} <span className="text-sm font-normal text-white/50">por comida</span></span>
+                                            <span className="mt-1 text-sm text-white/60">Para comer en 24 a 48 horas.</span>
+                                        </button>
+                                        <button type="button" role="radio" aria-checked={allVacuum} onClick={() => setAllVacuum(true)} className={option(allVacuum)}>
+                                            <span className="text-lg font-black uppercase italic">Al vacío</span>
+                                            <span className="mt-1 text-2xl font-black tabular-nums">{formatPrice(SINGLE_PRICE + CONFIG.vacuumExtraPrice)} <span className="text-sm font-normal text-white/50">por comida</span></span>
+                                            <span className="mt-1 text-sm text-white/60">Selladas, hasta 5 días en heladera.</span>
+                                        </button>
+                                    </div>
+                                    {canBePack && (
+                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-nppro-green/40 bg-nppro-green/10 p-4">
+                                            <p className="text-sm">
+                                                Con {packMeals} comidas ya podés armar un pack: congelado te sale{' '}
+                                                <strong>{formatPrice(getPackPricePerMeal(packMeals, 'frozen'))}</strong> cada una.
+                                            </p>
+                                            <button type="button" onClick={moveToPack} className="rounded-full bg-nppro-green px-5 py-2.5 text-sm font-black uppercase italic text-black">Pasarlo a pack</button>
+                                        </div>
                                     )}
-                                </button>
-                                <div className="flex items-center gap-2 justify-center mt-6 text-[10px] text-nppro-gray font-black uppercase tracking-[0.2em]">
-                                    <AlertCircle size={12} /> Coordinamos el pago por privado
-                                </div>
+                                </>
+                            )}
+                        </section>
+
+                        {/* Datos */}
+                        <section aria-labelledby="co-datos">
+                            <h2 id="co-datos" className="text-2xl font-black">¿A dónde te lo llevamos?</h2>
+                            <div className="mt-5">
+                                <CustomerFields
+                                    value={customerForOrder}
+                                    onChange={updateCustomer}
+                                    days={days}
+                                    shippingNote={isPack ? 'Tu pack tiene envío gratis.' : 'El envío de comidas sueltas lo coordinamos por WhatsApp.'}
+                                />
                             </div>
-                        </div>
+                        </section>
                     </div>
 
+                    {/* Resumen */}
+                    <aside>
+                        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-7 lg:sticky lg:top-28">
+                            <h2 className="text-xl font-black">Resumen</h2>
+                            {order ? (
+                                <dl className="mt-5 space-y-3 text-sm">
+                                    {order.perMeal !== null && (
+                                        <div className="flex justify-between"><dt className="text-white/55">Por comida (pack)</dt><dd className="tabular-nums">{formatPrice(order.perMeal)}</dd></div>
+                                    )}
+                                    <div className="flex justify-between"><dt className="text-white/55">{meals} {meals === 1 ? 'comida' : 'comidas'}</dt><dd className="tabular-nums">{formatPrice(order.foodTotal)}</dd></div>
+                                    {order.vacuumExtra > 0 && (
+                                        <div className="flex justify-between"><dt className="text-white/55">Envasado al vacío</dt><dd className="tabular-nums">+{formatPrice(order.vacuumExtra)}</dd></div>
+                                    )}
+                                    {order.coupon && (
+                                        <div className="flex justify-between font-bold text-nppro-green"><dt>Cupón {order.coupon.code}</dt><dd className="tabular-nums">-{formatPrice(order.coupon.amount)}</dd></div>
+                                    )}
+                                    {order.shipping !== null && (
+                                        <div className="flex justify-between">
+                                            <dt className="text-white/55">{customer.deliveryType === 'retiro' ? 'Retiro en el local' : 'Envío'}</dt>
+                                            <dd className={order.shipping === 0 ? 'font-bold text-nppro-green' : 'tabular-nums'}>{order.shipping === 0 ? 'Gratis' : formatPrice(order.shipping)}</dd>
+                                        </div>
+                                    )}
+                                    <div className="flex items-baseline justify-between border-t border-white/10 pt-4">
+                                        <dt className="font-bold">Total</dt>
+                                        <dd className="text-4xl font-black tabular-nums tracking-tight">{formatPrice(order.total)}</dd>
+                                    </div>
+                                </dl>
+                            ) : (
+                                <p className="mt-5 text-sm text-white/55">Elegí congelado o al vacío para ver el total.</p>
+                            )}
+
+                            {/* Cupón */}
+                            <div className="mt-6 border-t border-white/10 pt-5">
+                                {!appliedCoupon ? (
+                                    <>
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+                                                <input
+                                                    type="text"
+                                                    value={couponCode}
+                                                    onChange={e => setCouponCode(e.target.value)}
+                                                    onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                                                    placeholder="Código de descuento"
+                                                    aria-label="Código de descuento"
+                                                    className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm focus:border-nppro-green focus:outline-none"
+                                                />
+                                            </div>
+                                            <button type="button" onClick={handleApplyCoupon} disabled={!couponCode || couponStatus === 'validating'} className="rounded-xl bg-white/10 px-4 text-sm font-bold hover:bg-white/20 disabled:opacity-50">
+                                                {couponStatus === 'validating' ? <Loader2 className="animate-spin" size={16} /> : 'Aplicar'}
+                                            </button>
+                                        </div>
+                                        {couponStatus === 'error' && <p className="mt-2 text-xs font-bold text-red-400">{couponMessage}</p>}
+                                    </>
+                                ) : (
+                                    <div className="flex items-center justify-between rounded-xl border border-nppro-green/30 bg-nppro-green/10 p-3 text-sm">
+                                        <span className="flex items-center gap-2 font-bold text-nppro-green"><Ticket size={14} /> {appliedCoupon.code}: {appliedCoupon.percent}% menos</span>
+                                        <button type="button" onClick={removeCoupon} aria-label="Quitar cupón" className="text-nppro-green/70 hover:text-nppro-green"><X size={16} /></button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <p className={`mt-5 text-sm ${canSend ? 'text-nppro-green' : 'text-white/55'}`}>{hint}</p>
+                            <button
+                                type="button"
+                                onClick={handleCheckout}
+                                disabled={!canSend}
+                                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-nppro-green py-4 text-sm font-black uppercase italic text-black transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+                            >
+                                {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Send size={17} />} Pedir por WhatsApp
+                            </button>
+                            {sent && (
+                                <p className="mt-4 rounded-2xl border border-nppro-green/40 bg-nppro-green/10 p-4 text-sm" role="status">
+                                    Te abrimos WhatsApp con el pedido escrito. Tocá enviar para confirmarlo.
+                                </p>
+                            )}
+                        </div>
+                    </aside>
                 </div>
             </div>
         </div>

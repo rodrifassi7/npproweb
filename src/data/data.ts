@@ -21,13 +21,9 @@ export const CONFIG: AppConfig = {
     WHATSAPP_NUMBER: '5492804385269',
     DELIVERY_DAYS: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
     PICKUP_ADDRESS: 'Paraguay 55, Trelew, Chubut',
+    // Comida suelta al vacío: $10.800 + $500 = $11.300
     VACUUM_PRICE_PER_ITEM: 500,
     vacuumExtraPrice: 500,
-    DISCOUNT_TIERS: [
-
-        { min: 10, max: 999, discount: 0.05 },
-
-    ],
 };
 
 export type DayKey = 'LUN' | 'MAR' | 'MIE' | 'JUE' | 'VIE';
@@ -362,25 +358,28 @@ export const MENU: Product[] = [
 ];
 
 /**
- * PACKS ARMADOS POR EL CLIENTE
- * Elige congelado o al vacío y suma las comidas que quiera (mínimo 5).
+ * PRECIOS (único lugar donde se tocan)
+ *
+ * Comida suelta (1 a 4, o hasta 9 desde la carta): $10.800 · al vacío $11.300
+ * Pack congelado:  $10.500 de 5 a 9 comidas · $10.000 desde 10
+ * Pack al vacío:   $11.300 de 5 a 9 comidas · $10.800 desde 10
+ * Envío de packs:  $3.500 de 5 a 9 · gratis desde 10 · sin cargo si retira en el local
  */
 export type PackType = 'frozen' | 'vacuum';
 
 export const PACK_CONFIG = {
     MIN_MEALS: 5,
     BIG_PACK_MEALS: 10,            // desde acá baja el precio y el envío es gratis
-    PRICE_PER_MEAL: 10500,         // congelado, de 5 a 9 comidas
-    PRICE_PER_MEAL_BIG: 10000,     // congelado, 10 comidas o más
-    VACUUM_EXTRA_PER_MEAL: 250,    // bolsa de vacío, por comida
+    PRICES: {
+        frozen: { small: 10500, big: 10000 },
+        vacuum: { small: 11300, big: 10800 },
+    } as Record<PackType, { small: number; big: number }>,
     SHIPPING: 3500,                // de 5 a 9 comidas
 };
 
 /** Precio por comida según la cantidad y el tipo de pack */
-export const getPackPricePerMeal = (meals: number, type: PackType) => {
-    const base = meals >= PACK_CONFIG.BIG_PACK_MEALS ? PACK_CONFIG.PRICE_PER_MEAL_BIG : PACK_CONFIG.PRICE_PER_MEAL;
-    return base + (type === 'vacuum' ? PACK_CONFIG.VACUUM_EXTRA_PER_MEAL : 0);
-};
+export const getPackPricePerMeal = (meals: number, type: PackType) =>
+    meals >= PACK_CONFIG.BIG_PACK_MEALS ? PACK_CONFIG.PRICES[type].big : PACK_CONFIG.PRICES[type].small;
 
 export const getPackShipping = (meals: number) =>
     meals >= PACK_CONFIG.BIG_PACK_MEALS ? 0 : PACK_CONFIG.SHIPPING;

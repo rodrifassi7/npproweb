@@ -1,25 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { Product, DiscountTier } from '../types';
-import type { CartItem } from '../types/cart';
-import { CONFIG } from '../data/data';
+import type { Product } from '../types';
+import type { CartItem, Variant } from '../types/cart';
 
 interface CartContextType {
     cart: CartItem[];
-    addToCart: (product: Product, options: { useVacuum: boolean; variant?: 'mass' | 'lean' }) => void;
+    addToCart: (product: Product, options: { useVacuum: boolean; variant?: Variant }) => void;
     removeFromCart: (itemKey: string) => void;
-    updateQuantity: (itemKey: string, quantity: number) => void;
+    setItemVariant: (itemKey: string, variant: Variant) => void;
     clearCart: () => void;
     totalItems: number;
-    subtotal: number;
-    packDiscount: number;
-    shippingCost: number;
-    vacuumTotal: number;
-    total: number;
-    currentDiscountTier: DiscountTier | null;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
-const STORAGE_KEY = 'nppro_cart_v1';
+// v2: cada comida guarda su versión (Volumen/Definición) y el precio se toma siempre de la carta actual
+const STORAGE_KEY = 'nppro_cart_v2';
+
+const makeKey = (id: string, variant: Variant | null, useVacuum: boolean) =>
+    `${id}_${variant ?? 'na'}_${useVacuum ? 'vac' : 'std'}`;
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [cart, setCart] = useState<CartItem[]>(() => {
@@ -27,113 +24,69 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const saved = localStorage.getItem(STORAGE_KEY);
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
-            console.error("Error loading cart", e);
+            console.error('Error loading cart', e);
             return [];
         }
     });
 
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+        } catch { /* sin storage */ }
     }, [cart]);
 
-    const addToCart = (product: Product, options: { useVacuum: boolean; variant?: 'mass' | 'lean' }) => {
-        const { useVacuum, variant } = options;
-        // La versión elegida (MASS/LEAN) separa líneas en el carrito y viaja en el nombre al pedido de WhatsApp.
-        const itemKey = `${product.id}_${variant ?? "na"}_${useVacuum ? "vac" : "std"}`;
-        const itemName = variant ? `${product.name} (${variant.toUpperCase()})` : product.name;
+    const addToCart = (product: Product, options: { useVacuum: boolean; variant?: Variant }) => {
+        // Si el plato viene en Volumen y Definición y no eligió, va Volumen (lo puede cambiar en el pedido)
+        const variant: Variant | null = product.macrosLean ? (options.variant ?? 'mass') : null;
+        const key = makeKey(product.id, variant, options.useVacuum);
 
-        setCart((prev) => {
-            const existing = prev.find((item) => item.key === itemKey);
-            if (existing) {
-                return prev.map((item) =>
-                    item.key === itemKey
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                );
+        setCart(prev => {
+            if (prev.some(item => item.key === key)) {
+                return prev.map(item => (item.key === key ? { ...item, quantity: item.quantity + 1 } : item));
             }
-            const newItem: CartItem = {
-                key: itemKey,
+            return [...prev, {
+                key,
                 id: product.id,
-                name: itemName,
+                name: product.name,
+                variant,
                 category: product.category,
-                price: product.price,
                 quantity: 1,
-                useVacuum: useVacuum,
+                useVacuum: options.useVacuum,
                 image: product.image || '',
-                packEligible: product.packEligible
-            };
-            return [...prev, newItem];
+                packEligible: product.packEligible,
+            }];
         });
     };
 
+    /** Saca una unidad; si era la última, saca la línea */
     const removeFromCart = (itemKey: string) => {
-        setCart((prev) => {
-            const existing = prev.find(item => item.key === itemKey);
-            if (existing && existing.quantity > 1) {
-                return prev.map(item => item.key === itemKey ? { ...item, quantity: item.quantity - 1 } : item);
+        setCart(prev => prev
+            .map(item => (item.key === itemKey ? { ...item, quantity: item.quantity - 1 } : item))
+            .filter(item => item.quantity > 0));
+    };
+
+    /** Cambia una línea entre Volumen y Definición (y la junta con otra igual si ya existía) */
+    const setItemVariant = (itemKey: string, variant: Variant) => {
+        setCart(prev => {
+            const item = prev.find(i => i.key === itemKey);
+            if (!item || item.variant === null || item.variant === variant) return prev;
+            const newKey = makeKey(item.id, variant, item.useVacuum);
+            const twin = prev.find(i => i.key === newKey);
+            if (twin) {
+                return prev
+                    .filter(i => i.key !== itemKey)
+                    .map(i => (i.key === newKey ? { ...i, quantity: i.quantity + item.quantity } : i));
             }
-            return prev.filter((item) => item.key !== itemKey);
+            return prev.map(i => (i.key === itemKey ? { ...i, key: newKey, variant } : i));
         });
     };
 
-    const updateQuantity = (itemKey: string, quantity: number) => {
-        setCart((prev) =>
-            prev.map((item) => (item.key === itemKey ? { ...item, quantity } : item)).filter(item => item.quantity > 0)
-        );
-    };
+    const clearCart = () => setCart([]);
 
-    const clearCart = () => {
-        setCart([]);
-    };
-
-    // ─── CALCULATIONS ──────────────────────────────────────────────
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-    const packEligibleCount = cart.reduce((acc, item) =>
-        item.packEligible ? acc + item.quantity : acc, 0
-    );
-
-    const currentDiscountTier = CONFIG.DISCOUNT_TIERS
-        .filter((tier) => packEligibleCount >= tier.min)
-        .sort((a, b) => b.discount - a.discount)[0] || null;
-
-    // Suma bruta de los ítems del carrito
-    const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
-    const eligibleSubtotal = cart.reduce((acc, item) =>
-        item.packEligible ? acc + item.price * item.quantity : acc, 0
-    );
-
-    // Descuento por volumen
-    const packDiscount = !currentDiscountTier ? 0 : eligibleSubtotal * currentDiscountTier.discount;
-
-    const vacuumTotal = cart.reduce((acc, item) =>
-        item.useVacuum ? acc + (CONFIG.vacuumExtraPrice || 200) * item.quantity : acc, 0
-    );
-
-    // El envío de los packs se calcula en la página de packs (no pasan por el carrito)
-    const shippingCost = 0;
-
-    // Compra suelta: suma de ítems - descuento por volumen + vacío
-    const total = subtotal - packDiscount + vacuumTotal;
-
     return (
-        <CartContext.Provider
-            value={{
-                cart,
-                addToCart,
-                removeFromCart,
-                updateQuantity,
-                clearCart,
-                totalItems,
-                subtotal,
-                packDiscount,
-                shippingCost,
-                vacuumTotal,
-                total,
-                currentDiscountTier,
-            }}
-        >
+        <CartContext.Provider value={{ cart, addToCart, removeFromCart, setItemVariant, clearCart, totalItems }}>
             {children}
         </CartContext.Provider>
     );

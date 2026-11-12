@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { MacroInfo, Product } from '../../types';
 import { useCart } from '../../hooks/useCart';
 import { CONFIG } from '../../data/data';
+import { formatPrice } from '../../utils/format';
 import AnimatedNumber from '../common/AnimatedNumber';
 
 type Variant = 'mass' | 'lean';
@@ -170,7 +171,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                                             </div>
                                             <span className="text-sm font-bold">Envasado al vacío</span>
                                         </div>
-                                        <span className="text-xs font-black">+${CONFIG.vacuumExtraPrice}</span>
+                                        <span className="text-xs font-black">+{formatPrice(CONFIG.vacuumExtraPrice)}</span>
                                     </button>
                                 )}
 
@@ -178,7 +179,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                                     <div className="flex flex-col">
                                         <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest">Total</span>
                                         <span className="text-3xl font-black text-white italic">
-                                            ${product.price + (useVacuum ? CONFIG.vacuumExtraPrice : 0)}
+                                            {formatPrice(product.price + (useVacuum ? CONFIG.vacuumExtraPrice : 0))}
                                         </span>
                                     </div>
 

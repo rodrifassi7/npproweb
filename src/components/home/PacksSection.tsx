@@ -16,7 +16,7 @@ const OPTIONS: { type: PackType; label: string; perks: string[]; featured?: bool
     {
         type: 'vacuum',
         label: 'Al vacío',
-        perks: ['Fresco, hasta 5 días en heladera', `+${formatPrice(PACK_CONFIG.VACUUM_EXTRA_PER_MEAL)} por comida (bolsa)`, `Envío gratis desde ${PACK_CONFIG.BIG_PACK_MEALS} comidas`],
+        perks: ['Fresco, hasta 5 días en heladera', 'El día lo coordinamos por WhatsApp', `Envío gratis desde ${PACK_CONFIG.BIG_PACK_MEALS} comidas`],
     },
 ];
 
@@ -32,8 +32,8 @@ const PacksSection: React.FC = () => (
                         Comé bien toda la semana
                     </h2>
                     <p className="mt-5 max-w-md text-white/60 md:text-lg">
-                        Armá tu pack con las comidas que quieras, congelado o al vacío. Desde {PACK_CONFIG.MIN_MEALS} comidas
-                        pagás menos por cada una, y desde {PACK_CONFIG.BIG_PACK_MEALS} todavía menos.
+                        Elegís tu objetivo, si lo querés congelado o al vacío, y las comidas que lleva. Desde {PACK_CONFIG.MIN_MEALS} comidas;
+                        llevando {PACK_CONFIG.BIG_PACK_MEALS} o más pagás menos por cada una y el envío es gratis.
                     </p>
 
                     {/* Platos, superpuestos */}
