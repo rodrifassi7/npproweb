@@ -21,12 +21,12 @@ const GOALS: Record<Variant, { label: string; tag: string; text: string }> = {
 const TYPES: Record<PackType, { label: string; text: string; delivery: string }> = {
     frozen: {
         label: 'Congelado',
-        text: 'Va directo al freezer y lo sacás cuando lo vas a comer. Es el más barato.',
+        text: 'Te lo llevamos congelado, listo para guardar en tu freezer. Es la opción más económica.',
         delivery: 'Entrega lunes o martes',
     },
     vacuum: {
         label: 'Al vacío',
-        text: 'Fresco, sellado al vacío. Dura hasta 5 días en heladera.',
+        text: 'Fresco, sellado al vacío. Dura más tiempo fresca en la heladera.',
         delivery: 'El día lo coordinamos por WhatsApp',
     },
 };
@@ -274,7 +274,7 @@ const PackBuilder: React.FC = () => {
                                     )}
                                 </div>
                                 <p className="mt-2 text-white/55">
-                                    Podés repetir las que quieras. Tocá un plato para ver qué trae. Macros en versión {GOALS[goal].label}.
+                                    Elegí {PACK_CONFIG.BIG_PACK_MEALS} y vas a ver el descuento y el envío gratis.
                                 </p>
                                 <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                                     {PACK_PRODUCTS.map(product => {

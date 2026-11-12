@@ -215,7 +215,7 @@ const Checkout: React.FC = () => {
                                                 <button key={t} type="button" role="radio" aria-checked={packType === t} onClick={() => setPackType(t)} className={option(packType === t)}>
                                                     <span className="flex items-center gap-2 text-lg font-black uppercase italic"><Icon size={18} className="text-nppro-green" />{t === 'frozen' ? 'Congelado' : 'Al vacío'}</span>
                                                     <span className="mt-1 text-2xl font-black tabular-nums">{formatPrice(getPackPricePerMeal(packMeals, t))} <span className="text-sm font-normal text-white/50">por comida</span></span>
-                                                    <span className="mt-1 text-sm text-white/60">{t === 'frozen' ? 'Directo al freezer. Entrega lunes o martes.' : 'Fresco, hasta 5 días en heladera.'}</span>
+                                                    <span className="mt-1 text-sm text-white/60">{t === 'frozen' ? 'Directo al freezer. Entrega lunes o martes.' : 'Fresco, dura más tiempo en la heladera.'}</span>
                                                 </button>
                                             );
                                         })}
@@ -233,14 +233,14 @@ const Checkout: React.FC = () => {
                                         <button type="button" role="radio" aria-checked={allVacuum} onClick={() => setAllVacuum(true)} className={option(allVacuum)}>
                                             <span className="text-lg font-black uppercase italic">Al vacío</span>
                                             <span className="mt-1 text-2xl font-black tabular-nums">{formatPrice(SINGLE_PRICE + CONFIG.vacuumExtraPrice)} <span className="text-sm font-normal text-white/50">por comida</span></span>
-                                            <span className="mt-1 text-sm text-white/60">Selladas, hasta 5 días en heladera.</span>
+                                            <span className="mt-1 text-sm text-white/60">Selladas, duran más tiempo frescas en la heladera.</span>
                                         </button>
                                     </div>
                                     {canBePack && (
                                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-nppro-green/40 bg-nppro-green/10 p-4">
                                             <p className="text-sm">
-                                                Con {packMeals} comidas ya podés armar un pack: congelado te sale{' '}
-                                                <strong>{formatPrice(getPackPricePerMeal(packMeals, 'frozen'))}</strong> cada una.
+                                                Sumá {PACK_CONFIG.BIG_PACK_MEALS - packMeals} más y llegás a {PACK_CONFIG.BIG_PACK_MEALS}: pagás{' '}
+                                                <strong>{formatPrice(getPackPricePerMeal(PACK_CONFIG.BIG_PACK_MEALS, 'frozen'))}</strong> cada una y el envío es gratis.
                                             </p>
                                             <button type="button" onClick={moveToPack} className="rounded-full bg-nppro-green px-5 py-2.5 text-sm font-black uppercase italic text-black">Pasarlo a pack</button>
                                         </div>

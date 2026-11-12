@@ -4,7 +4,7 @@ import FadeIn from '../common/FadeIn';
 
 const FEATURES = [
     { icon: <Leaf size={18} />, title: 'Sin conservantes', text: 'Lo conserva el sellado, no los aditivos.' },
-    { icon: <ShieldCheck size={18} />, title: 'Hasta 5 días en heladera', text: 'Validado con pruebas de laboratorio.' },
+    { icon: <ShieldCheck size={18} />, title: 'Más tiempo fresca en la heladera', text: 'Sellada al vacío apenas sale de la cocina.' },
     { icon: <Snowflake size={18} />, title: 'Va directo al freezer', text: 'Si no la comés a tiempo, la congelás en la misma bolsa.' },
     { icon: <Timer size={18} />, title: 'Lista en minutos', text: 'Al microondas, sin ensuciar nada.' },
 ];
