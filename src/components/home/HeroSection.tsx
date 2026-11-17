@@ -11,6 +11,17 @@ const HERO_DISHES = HERO_IDS
 
 const ROTATE_MS = 4200;
 
+// Precios para la comparación suelta contra pack (salen de data.ts: si cambian, cambia solo)
+const SINGLE_PRICE = MENU.find(p => p.packEligible)?.price ?? 0;
+const BIG_PACK_PRICE = getPackPricePerMeal(PACK_CONFIG.BIG_PACK_MEALS, 'frozen');
+const PACK_SAVING = (SINGLE_PRICE - BIG_PACK_PRICE) * PACK_CONFIG.BIG_PACK_MEALS;
+
+// Los dos botones de la portada entran al armador con el objetivo ya elegido
+const GOAL_LINKS = [
+    { param: 'definicion', label: 'Definición', hint: 'Bajar grasa' },
+    { param: 'volumen', label: 'Volumen', hint: 'Ganar masa' },
+];
+
 const prefersReducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -71,28 +82,40 @@ const HeroSection: React.FC = () => {
                         <span className="hero-line block" style={{ '--d': '280ms' } as React.CSSProperties}>Rendís.</span>
                     </h1>
 
-                    <p className="hero-fade mb-7 max-w-md text-[15px] leading-relaxed text-white/60 md:mb-9 md:text-lg" style={{ '--d': '420ms' } as React.CSSProperties}>
-                        Viandas altas en proteína, hechas en Trelew. Elegí Volumen o Definición,
-                        armá tu pack y lo tenés listo en minutos.
+                    <p className="hero-fade mb-6 max-w-md text-[15px] leading-relaxed text-white/60 md:mb-8 md:text-lg" style={{ '--d': '420ms' } as React.CSSProperties}>
+                        Tu semana de comida, resuelta. Armá tu pack de comidas altas en proteína,
+                        congeladas o al vacío, y te lo llevamos.
                     </p>
 
-                    <div className="hero-fade flex flex-row gap-3" style={{ '--d': '520ms' } as React.CSSProperties}>
-                        <Link
-                            to="/packs"
-                            className="inline-flex flex-1 items-center justify-center rounded-full bg-nppro-green px-5 py-3.5 text-sm sm:flex-none sm:px-8 md:py-4 font-black uppercase italic text-black transition-transform hover:scale-[1.03] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nppro-green md:text-base"
-                        >
-                            Armar mi pack
-                        </Link>
+                    {/* Entrada directa al armador de packs, con el objetivo ya elegido */}
+                    <div className="hero-fade" style={{ '--d': '520ms' } as React.CSSProperties}>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-white/45">
+                            Armá tu pack · ¿Cuál es tu objetivo?
+                        </p>
+                        <div className="grid max-w-md grid-cols-2 gap-3">
+                            {GOAL_LINKS.map(g => (
+                                <Link
+                                    key={g.param}
+                                    to={`/packs?objetivo=${g.param}`}
+                                    className="flex flex-col rounded-2xl bg-nppro-green px-4 py-3.5 text-black transition-transform hover:scale-[1.03] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nppro-green md:px-5 md:py-4"
+                                >
+                                    <span className="text-base font-black uppercase italic leading-tight md:text-xl">{g.label}</span>
+                                    <span className="text-xs font-semibold text-black/65 md:text-sm">{g.hint}</span>
+                                </Link>
+                            ))}
+                        </div>
                         <Link
                             to="/menu"
-                            className="inline-flex flex-1 items-center justify-center rounded-full border border-white/15 px-5 py-3.5 text-sm sm:flex-none sm:px-8 md:py-4 font-bold text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:text-base"
+                            className="mt-4 inline-block text-sm font-bold text-white/55 underline-offset-4 transition-colors hover:text-white hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                         >
-                            Ver el menú
+                            Prefiero ver el menú
                         </Link>
                     </div>
 
-                    <p className="hero-fade mt-6 text-sm text-white/45" style={{ '--d': '620ms' } as React.CSSProperties}>
-                        Pack de {PACK_CONFIG.BIG_PACK_MEALS}: <span className="font-semibold text-white/80">{formatPrice(getPackPricePerMeal(PACK_CONFIG.BIG_PACK_MEALS, 'frozen'))} por comida</span>, con envío gratis en Trelew.
+                    <p className="hero-fade mt-6 max-w-md text-sm leading-relaxed text-white/45" style={{ '--d': '620ms' } as React.CSSProperties}>
+                        Suelta {formatPrice(SINGLE_PRICE)}. En pack de {PACK_CONFIG.BIG_PACK_MEALS}:{' '}
+                        <span className="font-semibold text-white/80">{formatPrice(BIG_PACK_PRICE)} por comida y envío gratis</span>.{' '}
+                        Ahorrás {formatPrice(PACK_SAVING)} en {PACK_CONFIG.BIG_PACK_MEALS} comidas.
                     </p>
                 </div>
 

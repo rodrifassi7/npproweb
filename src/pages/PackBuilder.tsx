@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Minus, Package, Plus, Send, Snowflake, Trash2, Truck } from 'lucide-react';
 import { MENU, PACK_CONFIG, getPackPricePerMeal, getPackShipping } from '../data/data';
 import type { PackType } from '../data/data';
@@ -32,6 +32,8 @@ const TYPES: Record<PackType, { label: string; text: string; delivery: string }>
 };
 
 const STEPS = ['Objetivo', 'Tipo', 'Comidas', 'Datos'];
+// Desde la portada se entra con el objetivo ya elegido: /packs?objetivo=definicion o volumen
+const GOAL_FROM_URL: Record<string, Variant> = { definicion: 'lean', volumen: 'mass' };
 const PACK_PRODUCTS: Product[] = MENU.filter(p => p.packEligible);
 const loadSaved = (): SavedPack => {
     try {
@@ -47,7 +49,12 @@ const card = (active: boolean) =>
         : 'border-white/10 bg-white/[0.03] hover:border-white/30'}`;
 
 const PackBuilder: React.FC = () => {
-    const [initial] = useState(loadSaved);
+    const [searchParams] = useSearchParams();
+    const [initial] = useState<SavedPack>(() => {
+        const saved = loadSaved();
+        const urlGoal = GOAL_FROM_URL[searchParams.get('objetivo') ?? ''];
+        return urlGoal ? { ...saved, goal: urlGoal, step: Math.max(saved.step, 1) } : saved;
+    });
     const [goal, setGoal] = useState<Variant | null>(initial.goal);
     const [type, setType] = useState<PackType | null>(initial.type);
     const [qty, setQty] = useState<Record<string, number>>(initial.qty);

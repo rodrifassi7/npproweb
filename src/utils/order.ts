@@ -33,7 +33,20 @@ export interface Customer {
     deliveryDay: string;
     paymentMethod: string;
     notes: string;
+    /** Cómo nos conoció (opcional). Va en el mensaje para que Fran lo cargue en NP Admin */
+    source: string;
+    sourceGym: string;
 }
+
+/** Opciones que ve el cliente → cómo figura en NP Admin */
+export const SOURCES: { value: string; label: string; admin: string }[] = [
+    { value: 'instagram', label: 'Instagram', admin: 'Instagram' },
+    { value: 'recomendacion', label: 'Me lo recomendaron', admin: 'Se lo recomendaron' },
+    { value: 'gimnasio', label: 'Mi gimnasio', admin: 'Gimnasio' },
+    { value: 'google', label: 'Google', admin: 'Web / Google' },
+    { value: 'local', label: 'Pasé por el local', admin: 'Pasó por el local' },
+    { value: 'otro', label: 'Otro', admin: 'Otro' },
+];
 
 export const PAYMENT_METHODS = ['Transferencia', 'Mercado Pago', 'Efectivo'];
 export const DAY_TO_COORDINATE = 'A coordinar';
@@ -50,6 +63,8 @@ const EMPTY_CUSTOMER: Customer = {
     deliveryDay: DAY_TO_COORDINATE,
     paymentMethod: PAYMENT_METHODS[0],
     notes: '',
+    source: '',
+    sourceGym: '',
 };
 
 /** Recuerda nombre, teléfono y dirección en el celular del cliente para el próximo pedido */
@@ -202,7 +217,7 @@ export const buildOrderMessage = (order: Order, customer: Customer): string => {
     const mixedVacuum = order.kind === 'sueltas' && new Set(order.lines.map(l => l.vacuum)).size > 1;
     const comidas = `${order.meals} ${order.meals === 1 ? 'comida' : 'comidas'}`;
 
-    const out: string[] = ['*NUEVO PEDIDO NPPRO*', ''];
+    const out: string[] = ['*NUEVO PEDIDO NPPRO (WEB)*', ''];
 
     out.push(order.kind === 'pack' && order.packType
         ? `*PACK ${order.packType === 'frozen' ? 'CONGELADO' : 'AL VACÍO'} de ${comidas}*`
@@ -241,6 +256,11 @@ export const buildOrderMessage = (order: Order, customer: Customer): string => {
     out.push(`Día: ${customer.deliveryDay}`);
     out.push(`Pago: ${customer.paymentMethod}`);
     if (customer.notes.trim()) out.push(`Notas: ${customer.notes.trim()}`);
+    const source = SOURCES.find(s => s.value === customer.source);
+    if (source) {
+        const gym = source.value === 'gimnasio' && customer.sourceGym.trim() ? ` (${customer.sourceGym.trim()})` : '';
+        out.push(`Cómo nos conoció: ${source.admin}${gym}`);
+    }
 
     return out.join('\n');
 };

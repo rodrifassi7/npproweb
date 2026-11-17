@@ -45,8 +45,8 @@ const Home: React.FC = () => {
 
             <HeroSection />
             <EntryDiscountModal />
-            <DailySpecialSection dailySpecials={dailySpecials} />
             <PacksSection />
+            <DailySpecialSection dailySpecials={dailySpecials} />
             <HowItWorksSection />
             <GoalsSection />
             <VacuumSection />

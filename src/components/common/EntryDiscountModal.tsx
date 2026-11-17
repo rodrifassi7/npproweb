@@ -4,6 +4,8 @@ import { X, Gift, MessageCircle, Sparkles } from 'lucide-react';
 import { CONFIG } from '../../data/data';
 
 const STORAGE_KEY = 'nppro_discount_modal_seen';
+// Aparece después de que la persona vio los packs (antes salía a los 2,5 s y los tapaba)
+const DELAY_MS = 15000;
 
 const EntryDiscountModal: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +23,7 @@ const EntryDiscountModal: React.FC = () => {
                 setIsOpen(true);
                 // Bloquear scroll cuando se abre
                 document.body.style.overflow = 'hidden';
-            }, 2500);
+            }, DELAY_MS);
             return () => clearTimeout(timer);
         }
     }, []);
