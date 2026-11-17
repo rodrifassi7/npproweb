@@ -20,6 +20,24 @@ const OPTIONS: { type: PackType; label: string; perks: string[]; featured?: bool
     },
 ];
 
+// Por qué conviene el pack: lo mismo que dice Fran en el mostrador y la cartelería del local
+const SINGLE_PRICE = MENU.find(p => p.packEligible)?.price ?? 0;
+const PACK_SAVING = (SINGLE_PRICE - getPackPricePerMeal(PACK_CONFIG.BIG_PACK_MEALS, 'frozen')) * PACK_CONFIG.BIG_PACK_MEALS;
+const WHY_PACK = [
+    {
+        title: 'Pagás menos',
+        text: `En ${PACK_CONFIG.BIG_PACK_MEALS} comidas ahorrás ${formatPrice(PACK_SAVING)} contra comprarlas sueltas, y el envío es gratis.`,
+    },
+    {
+        title: 'No pensás qué comer',
+        text: `La semana queda resuelta: elegís tus comidas una vez, desde ${PACK_CONFIG.MIN_MEALS}, y listo.`,
+    },
+    {
+        title: 'Te lo llevamos',
+        text: 'Congelado para el freezer o al vacío para la heladera. Lo calentás en minutos.',
+    },
+];
+
 // Algunos platos para mostrar
 const PACK_PLATES = MENU.filter(p => p.packEligible && p.image).slice(0, 5);
 
@@ -31,10 +49,17 @@ const PacksSection: React.FC = () => (
                     <h2 className="text-4xl font-black uppercase italic leading-[0.95] tracking-tighter md:text-6xl">
                         Comé bien toda la semana
                     </h2>
-                    <p className="mt-5 max-w-md text-white/60 md:text-lg">
-                        Elegís tu objetivo, si lo querés congelado o al vacío, y las comidas que lleva. Desde {PACK_CONFIG.MIN_MEALS} comidas;
-                        llevando {PACK_CONFIG.BIG_PACK_MEALS} o más pagás menos por cada una y el envío es gratis.
-                    </p>
+                    <ul className="mt-6 max-w-md space-y-4">
+                        {WHY_PACK.map(({ title, text }) => (
+                            <li key={title} className="flex gap-3">
+                                <Check size={20} strokeWidth={3} className="mt-1 shrink-0 text-nppro-green" />
+                                <span>
+                                    <span className="block font-black md:text-lg">{title}</span>
+                                    <span className="text-white/60">{text}</span>
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
 
                     {/* Platos, superpuestos */}
                     <div className="mt-8 flex" aria-hidden="true">

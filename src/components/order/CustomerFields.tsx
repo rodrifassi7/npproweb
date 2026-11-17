@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, Store, Truck } from 'lucide-react';
 import { CONFIG } from '../../data/data';
-import { PAYMENT_METHODS } from '../../utils/order';
+import { PAYMENT_METHODS, SOURCES } from '../../utils/order';
 import type { Customer } from '../../utils/order';
 
 interface Props {
@@ -77,6 +77,22 @@ const CustomerFields: React.FC<Props> = ({ value, onChange, days, shippingNote }
                     {PAYMENT_METHODS.map(m => <option key={m} value={m} className="bg-[#0B0B0B]">{m}</option>)}
                 </select>
             </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+                <label htmlFor="c-source" className={label}>¿Cómo nos conociste?</label>
+                <select id="c-source" value={value.source} onChange={e => onChange({ source: e.target.value })} className={`${input} appearance-none`}>
+                    <option value="" className="bg-[#0B0B0B]">Elegí una opción</option>
+                    {SOURCES.map(s => <option key={s.value} value={s.value} className="bg-[#0B0B0B]">{s.label}</option>)}
+                </select>
+            </div>
+            {value.source === 'gimnasio' && (
+                <div>
+                    <label htmlFor="c-gym" className={label}>¿Cuál?</label>
+                    <input id="c-gym" type="text" value={value.sourceGym} onChange={e => onChange({ sourceGym: e.target.value })} placeholder="Nombre del gimnasio" className={input} />
+                </div>
+            )}
         </div>
 
         <div>
