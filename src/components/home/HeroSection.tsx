@@ -1,15 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { Truck } from 'lucide-react';
 import { MENU, PACK_CONFIG, getPackPricePerMeal } from '../../data/data';
 import { formatPrice } from '../../utils/format';
-
-// Platos que van girando en la portada (se leen del menú, así los macros siempre coinciden).
-const HERO_IDS = ['m10', 'm6', 'm15', 'm12', 'm1'];
-const HERO_DISHES = HERO_IDS
-    .map(id => MENU.find(p => p.id === id))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p && p.image && p.macros));
-
-const ROTATE_MS = 4200;
+import packImg from '../../assets/pack-bolsa.webp';
 
 // Precios para la comparación suelta contra pack (salen de data.ts: si cambian, cambia solo)
 const SINGLE_PRICE = MENU.find(p => p.packEligible)?.price ?? 0;
@@ -26,27 +20,9 @@ const prefersReducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const HeroSection: React.FC = () => {
-    const [index, setIndex] = useState(0);
-    const [extrasReady, setExtrasReady] = useState(false);
-    const [paused, setPaused] = useState(false);
     const sectionRef = useRef<HTMLElement>(null);
 
-    // El primer plato carga ya; el resto, un rato después (no compiten con la carga inicial).
-    useEffect(() => {
-        const t = setTimeout(() => setExtrasReady(true), 1200);
-        return () => clearTimeout(t);
-    }, []);
-
-    // Rotación automática de platos.
-    useEffect(() => {
-        if (!extrasReady || paused || prefersReducedMotion()) return;
-        const t = setInterval(() => {
-            if (document.visibilityState === 'visible') setIndex(i => (i + 1) % HERO_DISHES.length);
-        }, ROTATE_MS);
-        return () => clearInterval(t);
-    }, [extrasReady, paused]);
-
-    // Al bajar, el plato gira y se aleja. Una sola variable CSS, actualizada por frame.
+    // Al bajar, el texto se va y el pack se aleja un poco. Una sola variable CSS, actualizada por frame.
     useEffect(() => {
         const el = sectionRef.current;
         if (!el || prefersReducedMotion()) return;
@@ -66,17 +42,36 @@ const HeroSection: React.FC = () => {
         };
     }, []);
 
-    const current = HERO_DISHES[index];
-
     return (
         <section ref={sectionRef} className="hero relative overflow-hidden bg-[#0B0B0B]">
-            {/* Luz suave detrás del plato (gradiente, no blur: es liviano en celulares) */}
+            {/* Luz suave detrás del pack (gradiente, no blur: es liviano en celulares) */}
             <div className="hero-glow pointer-events-none absolute inset-0" aria-hidden="true" />
 
-            <div className="container relative mx-auto grid items-center gap-8 px-6 pb-14 pt-28 md:min-h-[100svh] md:grid-cols-[1.05fr_1fr] md:gap-6 md:pb-10 md:pt-24">
-                {/* Texto */}
+            <div className="container relative mx-auto grid items-center gap-6 px-6 pb-14 pt-24 md:min-h-[100svh] md:grid-cols-[1.05fr_1fr] md:gap-10 md:pb-10">
+                {/* El pack: en el celular es lo primero que se ve; en la compu va a la derecha */}
+                <div className="hero-pack relative order-first mx-auto w-full max-w-[300px] sm:max-w-[380px] md:order-last md:max-w-[480px]">
+                    <div className="relative aspect-square overflow-hidden rounded-[2rem] ring-1 ring-white/10 md:aspect-[4/5]">
+                        <img
+                            src={packImg}
+                            alt="Bolsa de NPPRO con el pack de comidas de la semana"
+                            width={704}
+                            height={880}
+                            decoding="async"
+                            fetchPriority="high"
+                            className="h-full w-full object-cover object-[50%_30%]"
+                        />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/75 to-transparent" aria-hidden="true" />
+                        <p className="absolute bottom-3.5 left-4 right-4 flex items-center gap-2 text-[13px] font-bold text-white md:bottom-5 md:left-5 md:right-5 md:text-base">
+                            <Truck size={17} className="shrink-0 text-nppro-green" />
+                            <span className="md:hidden">Envío gratis desde {PACK_CONFIG.BIG_PACK_MEALS} comidas</span>
+                            <span className="hidden md:inline">Te lo llevamos. Envío gratis desde {PACK_CONFIG.BIG_PACK_MEALS} comidas.</span>
+                        </p>
+                    </div>
+                </div>
+
+                {/* Texto y entrada al armador */}
                 <div className="hero-copy min-w-0 max-w-xl">
-                    <h1 className="mb-5 pt-[0.12em] text-[13.5vw] font-black uppercase italic leading-[0.98] tracking-tighter sm:text-[10vw] md:mb-6 md:text-[5.6rem] lg:text-[6.6rem]">
+                    <h1 className="mb-4 pt-[0.12em] text-[10.5vw] font-black uppercase italic leading-[0.98] tracking-tighter sm:text-[9vw] md:mb-6 md:text-[5.6rem] lg:text-[6.6rem]">
                         <span className="hero-line block" style={{ '--d': '0ms' } as React.CSSProperties}>Calentás.</span>
                         <span className="hero-line block" style={{ '--d': '140ms' } as React.CSSProperties}>Comés.</span>
                         <span className="hero-line block" style={{ '--d': '280ms' } as React.CSSProperties}>Rendís.</span>
@@ -117,66 +112,6 @@ const HeroSection: React.FC = () => {
                         <span className="font-semibold text-white/80">{formatPrice(BIG_PACK_PRICE)} por comida y envío gratis</span>.{' '}
                         Ahorrás {formatPrice(PACK_SAVING)} en {PACK_CONFIG.BIG_PACK_MEALS} comidas.
                     </p>
-                </div>
-
-                {/* Plato */}
-                <div
-                    className="relative mx-auto w-full min-w-0 max-w-[340px] md:max-w-[520px]"
-                    onMouseEnter={() => setPaused(true)}
-                    onMouseLeave={() => setPaused(false)}
-                >
-                    <div className="hero-plate relative aspect-square">
-                        {HERO_DISHES.map((dish, i) =>
-                            i === 0 || extrasReady ? (
-                                <img
-                                    key={dish.id}
-                                    src={dish.image}
-                                    alt={i === index ? dish.name : ''}
-                                    aria-hidden={i !== index}
-                                    width={640}
-                                    height={640}
-                                    decoding="async"
-                                    {...(i === 0 ? { fetchPriority: 'high' as const } : { loading: 'lazy' as const })}
-                                    className={`hero-dish absolute inset-0 h-full w-full object-contain ${i === index ? 'is-active' : ''}`}
-                                />
-                            ) : null
-                        )}
-                    </div>
-
-                    {/* Plato actual y sus macros */}
-                    <div className="hero-fade mt-4 text-center" style={{ '--d': '700ms' } as React.CSSProperties} aria-live="polite">
-                        <Link to="/menu" className="text-sm font-bold text-white hover:text-nppro-green md:text-base">
-                            {current.name}
-                        </Link>
-                        <dl className="mt-3 flex justify-center gap-6 tabular-nums">
-                            <div>
-                                <dt className="text-xs text-white/45">Proteína</dt>
-                                <dd className="text-xl font-black text-nppro-green">{current.macros?.protein} g</dd>
-                            </div>
-                            <div>
-                                <dt className="text-xs text-white/45">Calorías</dt>
-                                <dd className="text-xl font-black">{current.macros?.kcal}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-xs text-white/45">Carbohidratos</dt>
-                                <dd className="text-xl font-black">{current.macros?.carbs} g</dd>
-                            </div>
-                        </dl>
-
-                        <div className="mt-4 flex justify-center gap-2" role="tablist" aria-label="Elegir plato">
-                            {HERO_DISHES.map((dish, i) => (
-                                <button
-                                    key={dish.id}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={i === index}
-                                    aria-label={dish.name}
-                                    onClick={() => { setIndex(i); setExtrasReady(true); setPaused(true); }}
-                                    className={`h-1.5 rounded-full transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${i === index ? 'w-6 bg-nppro-green' : 'w-1.5 bg-white/25 hover:bg-white/50'}`}
-                                />
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>

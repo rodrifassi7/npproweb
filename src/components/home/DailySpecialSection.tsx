@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import type { Product } from '../../types';
 import FadeIn from '../common/FadeIn';
+import logoImg from '../../assets/logo.png';
 import { formatPrice } from '../../utils/format';
 
 interface DailySpecialSectionProps {
@@ -51,15 +52,22 @@ const DailySpecialSection: React.FC<DailySpecialSectionProps> = ({ dailySpecials
                             className="w-[82%] shrink-0 snap-center md:w-auto"
                         >
                             <article className="flex h-full flex-col rounded-[2rem] border border-white/[0.06] bg-white/[0.03] p-5 md:flex-row md:items-center md:gap-6 md:p-6">
-                                <img
-                                    src={product.image}
-                                    alt={product.name}
-                                    loading="lazy"
-                                    decoding="async"
-                                    width={640}
-                                    height={640}
-                                    className="mx-auto aspect-square w-full max-w-[260px] object-contain md:w-48 md:max-w-none"
-                                />
+                                {product.image ? (
+                                    <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        loading="lazy"
+                                        decoding="async"
+                                        width={640}
+                                        height={640}
+                                        className="mx-auto aspect-square w-full max-w-[260px] object-contain md:w-48 md:max-w-none"
+                                    />
+                                ) : (
+                                    // Plato todavía sin foto: logo en vez de una imagen rota
+                                    <div className="mx-auto flex aspect-square w-full max-w-[260px] items-center justify-center rounded-full bg-white/[0.04] md:w-48 md:max-w-none" aria-hidden="true">
+                                        <img src={logoImg} alt="" width={96} height={96} className="w-20 opacity-30 md:w-16" />
+                                    </div>
+                                )}
                                 <div className="mt-4 flex flex-1 flex-col md:mt-0">
                                     <span className="text-sm font-semibold text-nppro-green">{shift}</span>
                                     <h3 className="mt-1 text-xl font-black uppercase italic leading-tight tracking-tight md:text-2xl">{product.name}</h3>
